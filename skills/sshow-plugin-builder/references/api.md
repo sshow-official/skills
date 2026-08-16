@@ -28,7 +28,7 @@ api.document;       // getState() · getObject(id) · getSelection() · setSelec
                     // setActiveScene(sceneId) · applyActions(actions, label)
 api.assets;         // get(uri) · register(bytes, { mimeType, originalName })
 api.events;         // on(type, callback) · off(type, callback)
-api.ui;             // resize(height) · getTheme()
+api.ui;             // resize(size) · getTheme()
 ```
 
 Connect once at startup and keep the handle. If the manifest's `api` is not
@@ -165,11 +165,21 @@ subscriptions are torn down automatically when the plugin closes.
 
 ## ui and theme
 
-### `ui.resize(height)`
+### `ui.resize(size)`
 
-Request a screen height in px, clamped to **120–800**. Without a call the
-iframe fills the host panel. Call it once after connect (and again if your
-content grows).
+Request a screen size in px. A number is a height request; an object
+carries either axis:
+
+```js
+api.ui.resize(300);                          // height only
+api.ui.resize({ width: 480, height: 520 }); // both axes
+```
+
+The host panel resizes so your screen gets the requested dimensions,
+clamped to the panel's own bounds (about 280×240 up to 90% of the editor
+window). Without a call the screen fills the default panel. Call it once
+after connect (and again if your content grows). The user can still drag
+the panel to any size afterwards — keep your layout fluid.
 
 ### Theme — CSS variables (preferred)
 
