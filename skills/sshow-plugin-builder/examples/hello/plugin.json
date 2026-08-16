@@ -1,0 +1,9 @@
+{
+    "id": "com.example.hello",
+    "name": "Hello",
+    "version": "1.0.0",
+    "api": 1,
+    "main": "ui.html",
+    "description": "Inserts a greeting card.",
+    "icon": "icon.svg"
+}

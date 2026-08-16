@@ -1,0 +1,37 @@
+<!doctype html>
+<style>
+    /* --sshow-* variables are injected by the editor and follow its
+       light/dark theme automatically. */
+    body { margin: 12px; font: var(--sshow-font-size)/1.5 system-ui, sans-serif; color: var(--sshow-foreground); }
+    button {
+        padding: 8px 16px; cursor: pointer;
+        border: 1px solid var(--sshow-border-color);
+        border-radius: var(--sshow-radius);
+        background: var(--sshow-primary);
+        color: var(--sshow-primary-foreground);
+    }
+    button:hover { background: var(--sshow-primary-strong); }
+    #hint { opacity: 0.6; margin-top: 8px; min-height: 1.2em; }
+</style>
+<button id="insert">Insert greeting</button>
+<div id="hint"></div>
+<script>
+    (async () => {
+        const api = await SSHOWPlugin.connect();
+        api.ui.resize(140);
+
+        const hint = document.querySelector('#hint');
+        document.querySelector('#insert').addEventListener('click', async () => {
+            const { applied, skipped } = await api.document.applyActions([{
+                op: 'create_object', type: 'text', config: {
+                    name: 'greeting',
+                    data: { text: 'Hello, SSHOW!', fontSize: 48, autoSize: true },
+                    transform: { x: 200, y: 200 }
+                }
+            }], 'Hello plugin');
+            hint.textContent = skipped.length
+                ? `Skipped: ${skipped[0].reason}`
+                : `Inserted (${applied} action, one undo step).`;
+        });
+    })();
+</script>

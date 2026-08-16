@@ -1,0 +1,14 @@
+{
+    "name": "sshow-skills",
+    "owner": { "name": "SSHOW" },
+    "metadata": { "description": "Agent skills for building on SSHOW", "version": "1.0.0" },
+    "plugins": [
+        {
+            "name": "sshow-skills",
+            "description": "Build SSHOW plugins (and soon, SSHOW projects) from any agent.",
+            "source": "./",
+            "strict": false,
+            "skills": ["./skills/sshow-plugin-builder"]
+        }
+    ]
+}
