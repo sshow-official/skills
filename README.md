@@ -21,8 +21,11 @@ Copilot, and any other agent that speaks the format.
 
 ```
 /plugin marketplace add sshow-official/skills
-/plugin install sshow-skills@sshow-skills
+/plugin install sshow-project-builder@sshow-skills   # build .sshow projects
+/plugin install sshow-plugin-builder@sshow-skills    # build editor plugins
 ```
+
+Each skill is its own plugin — install only what you need.
 
 Or copy a skill folder into `~/.claude/skills/` (all projects) or
 `.claude/skills/` (one project).

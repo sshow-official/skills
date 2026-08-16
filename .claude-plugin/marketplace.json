@@ -4,11 +4,18 @@
     "metadata": { "description": "Agent skills for building on SSHOW", "version": "1.0.0" },
     "plugins": [
         {
-            "name": "sshow-skills",
-            "description": "Build SSHOW projects and plugins from any agent.",
+            "name": "sshow-project-builder",
+            "description": "Build SSHOW projects — multi-scene .sshow documents with design, media, and motion — from any agent.",
             "source": "./",
             "strict": false,
-            "skills": ["./skills/sshow-plugin-builder", "./skills/sshow-project-builder"]
+            "skills": ["./skills/sshow-project-builder"]
+        },
+        {
+            "name": "sshow-plugin-builder",
+            "description": "Build SSHOW editor plugins, packaged as .sshowplugin, from any agent.",
+            "source": "./",
+            "strict": false,
+            "skills": ["./skills/sshow-plugin-builder"]
         }
     ]
 }
