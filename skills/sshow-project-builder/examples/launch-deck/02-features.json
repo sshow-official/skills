@@ -94,7 +94,12 @@
                     "effects": []
                 },
                 "data": {
-                    "radius": 24
+                    "radius": [
+                        24,
+                        24,
+                        24,
+                        24
+                    ]
                 },
                 "motion": {
                     "animations": {
@@ -152,7 +157,12 @@
                     "effects": []
                 },
                 "data": {
-                    "radius": 24
+                    "radius": [
+                        24,
+                        24,
+                        24,
+                        24
+                    ]
                 },
                 "motion": {
                     "animations": {
@@ -210,7 +220,12 @@
                     "effects": []
                 },
                 "data": {
-                    "radius": 24
+                    "radius": [
+                        24,
+                        24,
+                        24,
+                        24
+                    ]
                 },
                 "motion": {
                     "animations": {

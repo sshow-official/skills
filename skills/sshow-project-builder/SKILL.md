@@ -49,7 +49,10 @@ Each file is one atomic batch in the engine's `apply_actions` vocabulary:
 - Op list and exact parameter shapes: [references/actions.md](references/actions.md).
   Values, units, defaults, and design rules: [references/guide.md](references/guide.md)
   — read the sections relevant to what you are building, and follow its
-  text formulas (F1–F17) and motion budgets exactly.
+  text formulas and motion budgets exactly. The F-numbering has gaps and
+  jumps (there is no F12; F13 comes last) — follow the rules as written,
+  not the count. Where the type scale conflicts (F6's derived caps vs
+  F1's ranges), the F1 ranges and the example deck win.
 - **The document boots empty — there are no scenes.** Create every scene
   with `create_scene` and a self-assigned `config.id` (`"s1"`, `"s2"`, …),
   and put that id in `sceneId` on **every** object op. An object op without
@@ -86,8 +89,12 @@ write `asset://` uris yourself. Keep individual media files sensible
    per-action reason (`file: op — reason`). Fix exactly what each reason
    names and rebuild. Zero rejections is the bar — the runner writes no
    output otherwise.
-4. **Look at the screenshots.** The runner writes one PNG per scene next
-   to the output. Actually open and inspect them — overflowing text,
+4. **Look at the screenshots.** The runner writes one PNG per scene into
+   a `scenes/` folder beside the output file (fixed names — give each
+   deck its own `--out` folder or a rebuild overwrites them). They render
+   the **authored document state**: entrance transitions and timeline
+   tracks are not applied, so an object that fades in from opacity 0
+   still shows fully. Actually open and inspect them — overflowing text,
    overlaps, and bad contrast pass validation but fail the eye. Fix,
    rebuild, look again.
 5. **Deliver** the `.sshow` (see below).
@@ -99,8 +106,8 @@ write `asset://` uris yourself. Keep individual media files sensible
    `fontSize` (F1). Centered text without `anchorX: 0.5` lands
    left-shifted by half its width.
 2. **Body copy in a box must be `autoSize: false` + explicit `size`**;
-   standalone titles/labels `autoSize: true` without `size` (guide §5
-   decision rule). autoSize text never wraps — break lines with `\n`.
+   standalone titles/labels `autoSize: true` without `size` (guide §4
+   text decision rule). autoSize text never wraps — break lines with `\n`.
 3. **`style` replaces wholesale** — always send the full
    `{ fills, strokes, effects }`. `transform`, `size`, `data`, and
    `layout` merge per key.
@@ -117,7 +124,10 @@ write `asset://` uris yourself. Keep individual media files sensible
    fallback was intended.
 8. **Respect the motion budgets** (guide §12 and §10 restraint): ≤6
    animated objects per scene, 2–3 keys per track, one curve family per
-   deck, reveals ≤ 1500ms. More motion reads as less quality.
+   deck, reveals ≤ 1500ms. For card grids, stagger the card surfaces
+   only and let their text ride the scene transition (as the example
+   does) — animating every child blows the budget. More motion reads as
+   less quality.
 9. **Interaction is out of scope** — `interaction` is a reserved stub in
    the engine; do not author it.
 
@@ -127,7 +137,9 @@ write `asset://` uris yourself. Keep individual media files sensible
   (`npm i playwright && npx playwright install chromium`).
 - Network for the engine bundle (default: the production bundle from
   s.show) and the font catalog. Offline or pinned builds: pass
-  `--bundle <path>` with a local engine bundle file.
+  `--bundle <path>` with a local engine bundle file — the font catalog
+  is fetched independently of the bundle, and when it is unreachable,
+  unresolved families render as system fallbacks (the build warns).
 
 ## Getting the .sshow into SSHOW
 
