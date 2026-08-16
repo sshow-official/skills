@@ -27,9 +27,11 @@ import { readFile, readdir, mkdir, writeFile, stat } from 'node:fs/promises';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { gunzipSync } from 'node:zlib';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const HARNESS_FILE = join(__dirname, 'harness.html');
+const VENDORED_BUNDLE = join(__dirname, '..', 'engine', 'sshow.min.js.gz');
 const DEFAULT_BUNDLE = 'https://s.show/statics/sshow/index.min.js';
 const DEFAULT_OUT = 'out/project.sshow';
 const SCREENSHOT_MAX_EDGE = 1280;
@@ -60,7 +62,7 @@ const parseCli = () => {
             allowPositionals: true,
             options: {
                 out: { type: 'string', default: DEFAULT_OUT },
-                bundle: { type: 'string', default: DEFAULT_BUNDLE }
+                bundle: { type: 'string' }
             }
         });
     } catch (error) {
@@ -169,7 +171,17 @@ const importChromium = async () => {
     fail('playwright is required — npm i playwright && npx playwright install chromium');
 };
 
+/**
+ * Resolve the engine bundle: explicit --bundle (path or url) wins, then the
+ * vendored gzip shipped with the skill (offline-capable, pinned to the same
+ * build the references were extracted from), then the production bundle.
+ */
 const loadBundle = async (bundle) => {
+    if (!bundle) {
+        const vendored = await readFile(VENDORED_BUNDLE).catch(() => null);
+        if (vendored) return gunzipSync(vendored);
+        bundle = DEFAULT_BUNDLE;
+    }
     if (isRemote(bundle)) {
         const response = await fetch(bundle).catch((error) => fail(`engine bundle fetch failed: ${bundle} — ${error.message}`));
         if (!response.ok) fail(`engine bundle fetch failed: ${bundle} — HTTP ${response.status}`);

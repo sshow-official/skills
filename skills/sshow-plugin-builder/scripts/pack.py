@@ -29,6 +29,7 @@ MAX_PACKAGE_BYTES = 10 * 1024 * 1024
 MAX_ID = 100
 MAX_NAME = 100
 MAX_DESCRIPTION = 2000
+MAX_AUTHOR = 100
 
 
 def fail(errors):
@@ -84,6 +85,13 @@ def validate(plugin_dir: Path):
             errors.append("description — string when present")
         elif len(description.strip()) > MAX_DESCRIPTION:
             errors.append(f"description — over {MAX_DESCRIPTION} chars")
+
+    author = manifest.get("author")
+    if author is not None:
+        if not isinstance(author, str):
+            errors.append("author — string when present")
+        elif len(author.strip()) > MAX_AUTHOR:
+            errors.append(f"author — over {MAX_AUTHOR} chars")
 
     icon = manifest.get("icon")
     if icon is not None:

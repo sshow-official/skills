@@ -135,11 +135,26 @@ write `asset://` uris yourself. Keep individual media files sensible
 
 - Node 20+ and Playwright with Chromium
   (`npm i playwright && npx playwright install chromium`).
-- Network for the engine bundle (default: the production bundle from
-  s.show) and the font catalog. Offline or pinned builds: pass
-  `--bundle <path>` with a local engine bundle file — the font catalog
-  is fetched independently of the bundle, and when it is unreachable,
-  unresolved families render as system fallbacks (the build warns).
+- The engine ships with the skill (`engine/sshow.min.js.gz`, the same
+  build the references were extracted from) — no network is needed for
+  the engine. Network is used only for the font catalog and remote
+  (https) assets: without it, unresolved fonts render as system
+  fallbacks (the build warns) and remote assets fail the build. Pass
+  `--bundle <path-or-url>` to build against a different engine build.
+
+## If the environment cannot run the runner
+
+Sandboxed agent environments sometimes cannot install Chromium. Do not
+improvise a different pipeline — package the build for the user to run
+locally instead: put your deck folder, the skill's `scripts/` and
+`engine/` folders (side by side, so `scripts/` finds `../engine/`), and
+a `package.json` with `{ "dependencies": { "playwright": "^1" } }` into
+one directory, then tell the user to run:
+
+```bash
+npm install && npx playwright install chromium
+node scripts/build.mjs <deck-dir> --out out/<name>.sshow
+```
 
 ## Getting the .sshow into SSHOW
 

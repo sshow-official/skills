@@ -47,6 +47,7 @@ that one global. There is no build step and no dependency install.
     "api": 1,
     "main": "ui.html",
     "description": "Inserts a greeting card.",
+    "author": "SSHOW",
     "icon": "icon.svg"
 }
 ```
@@ -58,8 +59,10 @@ that one global. There is no build step and no dependency install.
   every earlier one, so bump before repackaging for publish.
 - `api` — must be the integer `1`. Anything else is refused at load.
 - `main` — the entry document filename inside the zip.
-- `description` / `icon` — optional but both drive the catalog listing;
-  always provide them for anything you intend to publish.
+- `description` / `author` / `icon` — optional but all three drive the
+  listing; always provide them for anything you intend to publish. In the
+  catalog the author line shows the verified submitter account — the
+  manifest `author` is what the editor's plugin list displays.
 
 Unknown manifest fields are silently dropped — do not invent fields.
 

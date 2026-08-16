@@ -29,6 +29,7 @@ Hard caps (enforced by the packer, the editor, and the server alike):
 | `id` length | ≤ 100 chars |
 | `name` length | ≤ 100 chars |
 | `description` length | ≤ 2000 chars |
+| `author` length | ≤ 100 chars |
 | Icon formats | png · svg · jpg · jpeg · webp |
 
 ## Test loops
