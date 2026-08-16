@@ -1,0 +1,187 @@
+{
+    "actions": [
+        {
+            "op": "set_document",
+            "set": {
+                "name": "Aurora Launch",
+                "description": "Three-scene product launch deck — the sshow-project-builder example."
+            }
+        },
+        {
+            "op": "set_scene_size",
+            "size": {
+                "width": 1920,
+                "height": 1080
+            }
+        },
+        {
+            "op": "create_scene",
+            "config": {
+                "id": "s1",
+                "name": "Cover"
+            }
+        },
+        {
+            "op": "update_scene",
+            "sceneId": "s1",
+            "set": {
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#0E0D16"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s1",
+            "type": "circle",
+            "config": {
+                "name": "halo",
+                "size": {
+                    "width": 1000,
+                    "height": 1000
+                },
+                "transform": {
+                    "x": 1460,
+                    "y": 220
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "radialGradient",
+                            "center": {
+                                "x": 0.5,
+                                "y": 0.5
+                            },
+                            "colors": [
+                                {
+                                    "offset": 0,
+                                    "color": "#7C6CF0",
+                                    "alpha": 0.5
+                                },
+                                {
+                                    "offset": 1,
+                                    "color": "#0E0D16",
+                                    "alpha": 0
+                                }
+                            ]
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "innerRadius": 0
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s1",
+            "type": "image",
+            "config": {
+                "name": "mark",
+                "size": {
+                    "width": 160,
+                    "height": 160
+                },
+                "transform": {
+                    "x": 960,
+                    "y": 330
+                },
+                "data": {
+                    "src": "assets/mark.png"
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s1",
+            "type": "text",
+            "config": {
+                "name": "title",
+                "transform": {
+                    "x": 960,
+                    "y": 540,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#F2F1F7"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Aurora",
+                    "fontSize": 132,
+                    "fontWeight": 700,
+                    "textAlign": "center",
+                    "autoSize": true,
+                    "lineHeight": 146,
+                    "verticalAlign": "middle"
+                },
+                "motion": {
+                    "transitions": {
+                        "opacity": {
+                            "type": "easing",
+                            "delay": 0,
+                            "easing": {
+                                "duration": 600,
+                                "curve": [
+                                    0.25,
+                                    0,
+                                    0.05,
+                                    1
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s1",
+            "type": "text",
+            "config": {
+                "name": "subtitle",
+                "transform": {
+                    "x": 960,
+                    "y": 680,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#A5A0C0"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Presentations that move",
+                    "fontSize": 40,
+                    "fontWeight": 400,
+                    "textAlign": "center",
+                    "autoSize": true,
+                    "lineHeight": 56,
+                    "verticalAlign": "middle"
+                }
+            }
+        }
+    ]
+}

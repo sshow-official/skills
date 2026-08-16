@@ -5,10 +5,10 @@
     "plugins": [
         {
             "name": "sshow-skills",
-            "description": "Build SSHOW plugins (and soon, SSHOW projects) from any agent.",
+            "description": "Build SSHOW projects and plugins from any agent.",
             "source": "./",
             "strict": false,
-            "skills": ["./skills/sshow-plugin-builder"]
+            "skills": ["./skills/sshow-plugin-builder", "./skills/sshow-project-builder"]
         }
     ]
 }

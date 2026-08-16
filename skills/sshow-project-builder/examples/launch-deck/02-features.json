@@ -1,0 +1,460 @@
+{
+    "actions": [
+        {
+            "op": "create_scene",
+            "config": {
+                "id": "s2",
+                "name": "Features"
+            }
+        },
+        {
+            "op": "update_scene",
+            "sceneId": "s2",
+            "set": {
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#0E0D16"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                }
+            }
+        },
+        {
+            "op": "update_scene",
+            "sceneId": "s2",
+            "set": {
+                "motion": {
+                    "animations": {
+                        "default": {
+                            "duration": 2400
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "text",
+            "config": {
+                "name": "heading",
+                "transform": {
+                    "x": 960,
+                    "y": 200,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#F2F1F7"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Why Aurora",
+                    "fontSize": 72,
+                    "fontWeight": 700,
+                    "textAlign": "center",
+                    "autoSize": true,
+                    "lineHeight": 80,
+                    "verticalAlign": "middle"
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "rect",
+            "config": {
+                "name": "card-design",
+                "size": {
+                    "width": 480,
+                    "height": 360
+                },
+                "transform": {
+                    "x": 440,
+                    "y": 620
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#1C1A2A"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "radius": 24
+                },
+                "motion": {
+                    "animations": {
+                        "default": {
+                            "keyframes": {
+                                "opacity": [
+                                    {
+                                        "time": 0,
+                                        "value": 0
+                                    },
+                                    {
+                                        "time": 500,
+                                        "value": 1,
+                                        "tween": {
+                                            "type": "easing",
+                                            "easing": {
+                                                "curve": [
+                                                    0.16,
+                                                    1,
+                                                    0.3,
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "rect",
+            "config": {
+                "name": "card-animate",
+                "size": {
+                    "width": 480,
+                    "height": 360
+                },
+                "transform": {
+                    "x": 960,
+                    "y": 620
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#1C1A2A"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "radius": 24
+                },
+                "motion": {
+                    "animations": {
+                        "default": {
+                            "keyframes": {
+                                "opacity": [
+                                    {
+                                        "time": 150,
+                                        "value": 0
+                                    },
+                                    {
+                                        "time": 650,
+                                        "value": 1,
+                                        "tween": {
+                                            "type": "easing",
+                                            "easing": {
+                                                "curve": [
+                                                    0.16,
+                                                    1,
+                                                    0.3,
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "rect",
+            "config": {
+                "name": "card-present",
+                "size": {
+                    "width": 480,
+                    "height": 360
+                },
+                "transform": {
+                    "x": 1480,
+                    "y": 620
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#1C1A2A"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "radius": 24
+                },
+                "motion": {
+                    "animations": {
+                        "default": {
+                            "keyframes": {
+                                "opacity": [
+                                    {
+                                        "time": 300,
+                                        "value": 0
+                                    },
+                                    {
+                                        "time": 800,
+                                        "value": 1,
+                                        "tween": {
+                                            "type": "easing",
+                                            "easing": {
+                                                "curve": [
+                                                    0.16,
+                                                    1,
+                                                    0.3,
+                                                    1
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "text",
+            "config": {
+                "name": "label-design",
+                "transform": {
+                    "x": 440,
+                    "y": 560,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#7C6CF0"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Design",
+                    "fontSize": 44,
+                    "fontWeight": 700,
+                    "textAlign": "center",
+                    "autoSize": true,
+                    "lineHeight": 49,
+                    "verticalAlign": "middle"
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "text",
+            "config": {
+                "name": "copy-design",
+                "size": {
+                    "width": 380,
+                    "height": 140
+                },
+                "transform": {
+                    "x": 440,
+                    "y": 680,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#A5A0C0"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Vector scenes with gradients, effects, and pinned layouts.",
+                    "fontSize": 26,
+                    "fontWeight": 400,
+                    "textAlign": "center",
+                    "autoSize": false,
+                    "breakWords": true,
+                    "lineHeight": 41,
+                    "verticalAlign": "middle"
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "text",
+            "config": {
+                "name": "label-animate",
+                "transform": {
+                    "x": 960,
+                    "y": 560,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#7C6CF0"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Animate",
+                    "fontSize": 44,
+                    "fontWeight": 700,
+                    "textAlign": "center",
+                    "autoSize": true,
+                    "lineHeight": 49,
+                    "verticalAlign": "middle"
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "text",
+            "config": {
+                "name": "copy-animate",
+                "size": {
+                    "width": 380,
+                    "height": 140
+                },
+                "transform": {
+                    "x": 960,
+                    "y": 680,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#A5A0C0"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Springs, easings, and a per-scene timeline clock.",
+                    "fontSize": 26,
+                    "fontWeight": 400,
+                    "textAlign": "center",
+                    "autoSize": false,
+                    "breakWords": true,
+                    "lineHeight": 41,
+                    "verticalAlign": "middle"
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "text",
+            "config": {
+                "name": "label-present",
+                "transform": {
+                    "x": 1480,
+                    "y": 560,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#7C6CF0"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Present",
+                    "fontSize": 44,
+                    "fontWeight": 700,
+                    "textAlign": "center",
+                    "autoSize": true,
+                    "lineHeight": 49,
+                    "verticalAlign": "middle"
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s2",
+            "type": "text",
+            "config": {
+                "name": "copy-present",
+                "size": {
+                    "width": 380,
+                    "height": 140
+                },
+                "transform": {
+                    "x": 1480,
+                    "y": 680,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#A5A0C0"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Play full screen with clicker stops and a presenter view.",
+                    "fontSize": 26,
+                    "fontWeight": 400,
+                    "textAlign": "center",
+                    "autoSize": false,
+                    "breakWords": true,
+                    "lineHeight": 41,
+                    "verticalAlign": "middle"
+                }
+            }
+        }
+    ]
+}

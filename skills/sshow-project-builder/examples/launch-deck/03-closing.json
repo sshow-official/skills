@@ -1,0 +1,108 @@
+{
+    "actions": [
+        {
+            "op": "create_scene",
+            "config": {
+                "id": "s3",
+                "name": "Closing"
+            }
+        },
+        {
+            "op": "update_scene",
+            "sceneId": "s3",
+            "set": {
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#0E0D16"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s3",
+            "type": "image",
+            "config": {
+                "name": "mark",
+                "size": {
+                    "width": 120,
+                    "height": 120
+                },
+                "transform": {
+                    "x": 960,
+                    "y": 400
+                },
+                "data": {
+                    "src": "assets/mark.png"
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s3",
+            "type": "text",
+            "config": {
+                "name": "cta",
+                "transform": {
+                    "x": 960,
+                    "y": 580,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#F2F1F7"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Start your story",
+                    "fontSize": 88,
+                    "fontWeight": 700,
+                    "textAlign": "center",
+                    "autoSize": true,
+                    "lineHeight": 97,
+                    "verticalAlign": "middle"
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "s3",
+            "type": "rect",
+            "config": {
+                "name": "underline",
+                "size": {
+                    "width": 280,
+                    "height": 8
+                },
+                "transform": {
+                    "x": 960,
+                    "y": 670
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#7C6CF0"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "radius": 4
+                }
+            }
+        }
+    ]
+}

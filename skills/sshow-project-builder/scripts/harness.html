@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>SSHOW Project Builder</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        /* Fixed pixel mount for deterministic rendering (same as the engine's
+           own test/figure harnesses; the document canvas size is independent
+           and set by the action document via set_scene_size). */
+        sshow {
+            position: relative;
+            display: block;
+            width: 1280px;
+            height: 720px;
+        }
+    </style>
+    <script type="importmap">
+        { "imports": { "SSHOW": "/sshow.js" } }
+    </script>
+</head>
+
+<body>
+    <sshow></sshow>
+    <script type="module">
+        import SSHOW, { buildActionBatch } from 'SSHOW';
+
+        window.__sshowReady = false;
+        window.__sshowError = null;
+
+        try {
+            const sshow = new SSHOW();
+            await sshow.init({
+                renderer: {
+                    container: document.querySelector('sshow')
+                }
+            });
+
+            window.sshow = sshow;
+            window.buildActionBatch = buildActionBatch;
+            window.__sshowReady = true;
+        } catch (error) {
+            window.__sshowError = error?.message ?? String(error);
+        }
+    </script>
+</body>
+
+</html>

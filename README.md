@@ -12,9 +12,8 @@ Copilot, and any other agent that speaks the format.
 
 | Skill | Description |
 |---|---|
+| [sshow-project-builder](skills/sshow-project-builder) | Build SSHOW projects — multi-scene `.sshow` documents with design, media, and motion, compiled from action JSON through the real engine |
 | [sshow-plugin-builder](skills/sshow-plugin-builder) | Build SSHOW editor plugins — manifest, sandboxed HTML screen, `.sshowplugin` packaging, testing, and publishing to the catalog |
-
-More are planned — next up: building SSHOW projects (documents) themselves.
 
 # Use with your agent
 
