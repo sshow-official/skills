@@ -132,6 +132,10 @@ Style the panel with the injected theme variables
    source of "the plugin does nothing" reports.
 10. **`assets.register` needs an `ArrayBuffer`** (not a Uint8Array), 10MB
     max per asset.
+11. **Absent means default, not zero.** Reads omit default-valued fields —
+    `opacity: 1`, identity transform keys, a keyframe's default tween. A
+    keyframe with no `tween` is the engine's ease-out, not linear; treating
+    absence as zero/linear silently misplays motion.
 
 ## Package and test
 

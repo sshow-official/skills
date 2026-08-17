@@ -19,7 +19,9 @@ python3 scripts/pack.py my-plugin/ --check    # validate only, no zip
 python3 scripts/pack.py my-plugin/ --out dist/plugin.sshowplugin
 ```
 
-Hard caps (enforced by the packer, the editor, and the server alike):
+Hard caps. The packer and the server enforce every row; the editor enforces
+the zip rows at load and leaves the text lengths to submission — so an
+over-long description imports fine locally and is refused at publish:
 
 | Cap | Value |
 |---|---|

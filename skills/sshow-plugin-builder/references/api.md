@@ -69,9 +69,20 @@ like:
 { id, type, name, transform, size, style, data, motion?, /* … */ }
 ```
 
-Very large fields are elided in snapshots (e.g. a long `data.src` becomes a
-`<src len=… kind=…>` marker). Never copy an elided marker back into a
-`set` — re-read the real value through `assets.get` instead.
+Two things make a snapshot smaller than the document:
+
+- **Default values are omitted.** `opacity: 1`, `visible: true`, identity
+  transform keys (`scaleX: 1`, `rotate: 0`, …), a paint's `type: 'solid'`,
+  a keyframe's default tween — all absent. Absent means *the default*,
+  never zero: a keyframe with no `tween` carries the engine's ease-out
+  `[0.25, 0, 0.05, 1]`, so reading absence as linear misplays motion.
+- **Asset bytes are elided.** A long `data.src` becomes a
+  `<src len=… kind=…>` marker. Never copy a marker back into a `set` —
+  read the real bytes with `assets.get` instead.
+
+Geometry is never summarised: `data.points` and `data.text` reach a plugin
+complete, however long, so trace a real path instead of falling back to its
+bounding box.
 
 ## document — editor state
 
@@ -198,7 +209,7 @@ a theme flip restyles your panel automatically:
 --sshow-background-solid
 --sshow-border-color
 --sshow-radius                13px
---sshow-font-size             14px
+--sshow-font-size             12px   panel-contents scale
 ```
 
 ```css
