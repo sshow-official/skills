@@ -124,8 +124,8 @@ Style the panel with the injected theme variables
    the returned `asset://` uri into an action in the same flow — an
    unreferenced asset is eligible for garbage collection.
 8. **Events carry no payload.** A callback firing means "re-query": call
-   the read API again. Only two event types exist (`history:update`,
-   `ui:modes:edit:changeSelectedObjects`).
+   the read API again. Only three event types exist (`history:update`,
+   `ui:modes:edit:changeSelectedObjects`, `motion:animation:timeUpdate`).
 9. **Check `skipped`.** `applyActions` returns `{ applied, skipped }`;
    malformed actions are skipped with reasons instead of failing the call.
    Surface a message when `skipped.length > 0` — silent no-ops are the top

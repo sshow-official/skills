@@ -25,7 +25,7 @@ api.apiVersion;     // 1 — the bridge contract this editor speaks
 api.engineVersion;  // engine build string, for display only
 
 api.document;       // getState() · getObject(id) · getSelection() · setSelection(ids)
-                    // setActiveScene(sceneId) · applyActions(actions, label)
+                    // setActiveScene(sceneId) · getTimelineTime() · applyActions(actions, label)
 api.assets;         // get(uri) · register(bytes, { mimeType, originalName })
 api.events;         // on(type, callback) · off(type, callback)
 api.ui;             // resize(size) · getTheme()
@@ -86,8 +86,8 @@ bounding box.
 
 ## document — editor state
 
-Two UI-state setters round out the reads. Neither touches the document or
-the undo history.
+Two UI-state setters and one editor-state read round out the reads. None
+of them touches the document or the undo history.
 
 ### `document.setSelection(ids) → Promise<void>`
 
@@ -105,6 +105,15 @@ await api.document.setSelection(['my-rect']);
 
 Switch the active scene (scene navigators, per-scene batch tools). Unknown
 ids reject — a plugin never keeps writing into the wrong scene.
+
+### `document.getTimelineTime() → Promise<number>`
+
+The editor's animation clock in ms — the time the canvas is posed at: the
+playhead while Animation mode holds, `0` in Design mode (the document
+pose). Start timeline work here — a bake, a preset — so it lands where the
+user is looking. `motion:animation:timeUpdate` fires on every move: re-read
+inside the callback, and re-read once more right before you write (leaving
+Animation mode resets the clock without a signal).
 
 ## document.applyActions — the only write path
 
@@ -163,12 +172,13 @@ await api.events.on('history:update', callback);
 await api.events.off('history:update', callback);
 ```
 
-Exactly two event types exist; anything else rejects:
+Exactly three event types exist; anything else rejects:
 
 | Type | Fires when |
 |---|---|
 | `history:update` | the document changed (edits, undo, redo — yours or the user's) |
 | `ui:modes:edit:changeSelectedObjects` | the selection changed |
+| `motion:animation:timeUpdate` | the animation clock moved (a seek, or every playback frame — debounce) |
 
 Callbacks receive **no arguments** — an event is a re-query signal. Read
 fresh state through the document API inside the callback. All
