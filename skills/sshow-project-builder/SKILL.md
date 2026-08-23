@@ -114,8 +114,9 @@ write `asset://` uris yourself. Keep individual media files sensible
 4. **`motion` merges per sub-container** — a sent `animations` map
    replaces the whole animations map but keeps `transitions`, and vice
    versa.
-5. **Rotation units**: `transform.rotate` is degrees (auto-converted);
-   `transform.rotation` and motion-track values are raw radians.
+5. **Rotation units**: `set.transform.rotateX/rotateY/rotateZ` are degrees
+   (auto-converted; `rotate` is the pre-3D spelling of `rotateZ`), while
+   motion-track `transform.rotate*` values are raw radians.
 6. **`(x, y)` is where the anchor lands** — with the default 0.5/0.5
    anchor it is the object's center, not its top-left.
 7. **Fonts come from the catalog** by `fontFamily` name (auto-loaded and

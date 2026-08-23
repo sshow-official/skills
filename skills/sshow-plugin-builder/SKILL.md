@@ -115,8 +115,9 @@ Style the panel with the injected theme variables
 4. **`motion` merges per sub-container.** Sending `{ animations }` replaces
    all animations but keeps `transitions`, and vice versa. To change one
    keyframe, read the whole container, modify it, send it back whole.
-5. **Rotation is radians.** `transform.rotate` (degrees) is auto-converted;
-   `transform.rotation` and motion-track rotation values are raw radians.
+5. **Rotation is radians.** `set.transform.rotateX/rotateY/rotateZ` (degrees)
+   are auto-converted — `rotate` is the pre-3D spelling of `rotateZ`.
+   Motion-track `transform.rotate*` values are raw radians.
 6. **Text sizing.** Default `autoSize: true` grows the box and only wraps
    on real newlines. Body copy that should wrap needs `autoSize: false`
    plus an explicit `size: { width, height }`.

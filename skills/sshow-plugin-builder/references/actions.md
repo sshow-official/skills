@@ -64,9 +64,9 @@ Three merge behaviors — getting these wrong corrupts user work:
 
 ## Normalization bridges
 
-- `transform.rotate` (**degrees**) is converted to `rotation` (**radians**)
-  for you. A raw `transform.rotation` you send is taken as radians as-is.
-  Motion-track rotation values are radians (engine units).
+- `transform.rotateX` / `rotateY` / `rotateZ` (**degrees**) are converted to
+  radians for you; `rotate` is the pre-3D spelling of `rotateZ`. Motion-track
+  `transform.rotate*` values are radians (engine units).
 - Style paints with a `color` but missing `type` default to `'solid'`;
   invalid effects entries are dropped.
 - Literal `\n` / `\t` inside `data.text` become real newlines/tabs.
