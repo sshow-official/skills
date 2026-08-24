@@ -1,21 +1,27 @@
 {
     "name": "sshow-skills",
-    "owner": { "name": "SSHOW" },
+    "owner": { "name": "SSHOW", "email": "support@s.show" },
     "metadata": { "description": "Agent skills for building on SSHOW", "version": "1.0.0" },
     "plugins": [
         {
             "name": "sshow-project-builder",
             "description": "Build SSHOW projects — multi-scene .sshow documents with design, media, and motion — from any agent.",
+            "author": { "name": "SSHOW", "email": "support@s.show" },
+            "category": "design",
             "source": "./",
             "strict": false,
-            "skills": ["./skills/sshow-project-builder"]
+            "skills": ["./skills/sshow-project-builder"],
+            "homepage": "https://s.show"
         },
         {
             "name": "sshow-plugin-builder",
             "description": "Build SSHOW editor plugins, packaged as .sshowplugin, from any agent.",
+            "author": { "name": "SSHOW", "email": "support@s.show" },
+            "category": "development",
             "source": "./",
             "strict": false,
-            "skills": ["./skills/sshow-plugin-builder"]
+            "skills": ["./skills/sshow-plugin-builder"],
+            "homepage": "https://s.show"
         }
     ]
 }

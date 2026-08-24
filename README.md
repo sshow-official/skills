@@ -64,3 +64,10 @@ name: my-skill
 description: Does X for Y files. Use when the user asks for X or mentions Y.
 ---
 ```
+
+# License
+
+MIT — see [LICENSE](LICENSE). It covers the skills and their instructions,
+references, scripts, and examples. The vendored engine bundle
+(`skills/sshow-project-builder/engine/`) is proprietary and excluded; so are
+the SSHOW name and marks.

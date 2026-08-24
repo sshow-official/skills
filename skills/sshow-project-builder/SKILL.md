@@ -7,7 +7,7 @@ description: >-
   to create an SSHOW presentation, deck, or story, turn an outline or brief
   into a .sshow file, or bring AI-generated content into SSHOW (s.show).
 metadata:
-  author: sshow-official
+  author: SSHOW
 ---
 
 # Building SSHOW Projects

@@ -7,7 +7,7 @@ description: >-
   mentions .sshowplugin files, the SSHOWPlugin SDK, or extending the SSHOW
   editor.
 metadata:
-  author: sshow-official
+  author: SSHOW
 ---
 
 # Building SSHOW Plugins
