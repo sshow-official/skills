@@ -138,13 +138,16 @@ write `asset://` uris yourself. Keep individual media files sensible
 
 ## Runner requirements
 
-- Node 20+ and Playwright with Chromium. Probe with
-  `node scripts/build.mjs --check`. When it reports playwright missing,
-  the fix is `npm i playwright && npx playwright install chromium` —
-  a few hundred MB, once per machine. In a desktop session (Cowork, or
-  any session running on the user's own computer) ask before running it;
-  it is their disk. If they decline, or the environment cannot install
-  Chromium at all, take the packaged handoff below instead.
+- Node 20+, the `playwright` package, and a chromium runtime. Probe with
+  `node scripts/build.mjs --check` — it reports which browser it resolved.
+  The runner tries playwright's own chromium first, then an installed
+  Chrome, then Edge, so a machine that already has Chrome needs no browser
+  download at all (`npm i playwright` is enough). Only when none of the
+  three is present does it ask for `npx playwright install chromium` —
+  a few hundred MB. In a desktop session (Cowork, or any session running
+  on the user's own computer) ask before downloading it; it is their disk.
+  If they decline, or the environment cannot install a browser at all,
+  take the packaged handoff below instead.
 - The engine ships with the skill (`engine/sshow.min.js.gz`, the same
   build the references were extracted from) — no network is needed for
   the engine. Network is used only for the font catalog and remote
@@ -163,7 +166,8 @@ a `package.json` with `{ "dependencies": { "playwright": "^1" } }` into
 one directory, then tell the user to run:
 
 ```bash
-npm install && npx playwright install chromium
+npm install
+node scripts/build.mjs --check   # if this fails: npx playwright install chromium
 node scripts/build.mjs <deck-dir> --out out/<name>.sshow
 ```
 

@@ -175,6 +175,32 @@ const importChromium = async () => {
 };
 
 /**
+ * The engine needs a chromium runtime, not playwright's copy of one. Try
+ * playwright's own build first (version-pinned), then a browser the machine
+ * already has — an installed Chrome or Edge skips the download entirely.
+ */
+const BROWSERS = [
+    { label: 'playwright chromium' },
+    { label: 'system chrome', channel: 'chrome' },
+    { label: 'system edge', channel: 'msedge' }
+];
+
+const launchBrowser = async () => {
+    const chromium = await importChromium();
+    const errors = [];
+    for (const { label, channel } of BROWSERS) {
+        const options = { args: CHROMIUM_ARGS };
+        if (channel) options.channel = channel;
+        try {
+            return { browser: await chromium.launch(options), label };
+        } catch (error) {
+            errors.push(`      ${label}: ${error.message.split('\n')[0].trim()}`);
+        }
+    }
+    fail(`no chromium runtime — install Chrome, or run npx playwright install chromium\n${errors.join('\n')}`);
+};
+
+/**
  * Prerequisite probe (`--check`) — node version, playwright, and a real
  * chromium launch. Run it before authoring anywhere the runner might not be
  * installable, so the deck is never written against an environment that
@@ -183,15 +209,9 @@ const importChromium = async () => {
 const preflight = async () => {
     const major = Number(process.versions.node.split('.')[0]);
     if (major < 20) fail(`node ${process.versions.node} — the runner needs node 20+`);
-    const chromium = await importChromium();
-    let browser;
-    try {
-        browser = await chromium.launch({ args: CHROMIUM_ARGS });
-    } catch (error) {
-        fail(`chromium did not launch — npx playwright install chromium (${error.message})`);
-    }
+    const { browser, label } = await launchBrowser();
     await browser.close();
-    console.error(`  ✓ node ${process.versions.node} + playwright chromium ready`);
+    console.error(`  ✓ node ${process.versions.node} + ${label} ready`);
 };
 
 /**
@@ -229,8 +249,7 @@ const serveHarness = async (bundleBytes) => {
     return { server, url: `http://127.0.0.1:${server.address().port}/` };
 };
 
-const bootEngine = async (chromium, url) => {
-    const browser = await chromium.launch({ args: CHROMIUM_ARGS });
+const bootEngine = async (browser, url) => {
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
     page.on('pageerror', (error) => warn(`engine: ${error.message}`));
     page.on('console', (msg) => {
@@ -243,7 +262,7 @@ const bootEngine = async (chromium, url) => {
     await page.waitForFunction(() => window.__sshowReady || window.__sshowError);
     const bootError = await page.evaluate(() => window.__sshowError);
     if (bootError) fail(`engine failed to boot: ${bootError}`);
-    return { browser, page };
+    return page;
 };
 
 //#endregion
@@ -260,10 +279,10 @@ const main = async () => {
 
     const sources = await loadAssetSources(files, baseDir);
     const bundleBytes = await loadBundle(bundle);
-    const chromium = await importChromium();
+    const { browser } = await launchBrowser();
 
     const { server, url } = await serveHarness(bundleBytes);
-    const { browser, page } = await bootEngine(chromium, url);
+    const page = await bootEngine(browser, url);
 
     try {
         // 1. Mint assets into the content-addressed store, rewrite src → asset://
