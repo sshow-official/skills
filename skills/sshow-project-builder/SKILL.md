@@ -81,15 +81,19 @@ write `asset://` uris yourself. Keep individual media files sensible
 
 ## Workflow
 
-1. **Author** the action files, one scene per file, with the schema and
+1. **Check the environment**: `node scripts/build.mjs --check`. It probes
+   node 20+, playwright, and a real Chromium launch. Settle this before
+   authoring anything — see "Runner requirements" below for what to do
+   when it fails.
+2. **Author** the action files, one scene per file, with the schema and
    guide open. Design to the guide's §11 defaults unless the user gave a
    direction (palette, spacing, hierarchy, whitespace).
-2. **Build**: `node scripts/build.mjs <dir> --out <file>.sshow`.
-3. **Fix rejections.** Any malformed action fails the build with a
+3. **Build**: `node scripts/build.mjs <dir> --out <file>.sshow`.
+4. **Fix rejections.** Any malformed action fails the build with a
    per-action reason (`file: op — reason`). Fix exactly what each reason
    names and rebuild. Zero rejections is the bar — the runner writes no
    output otherwise.
-4. **Look at the screenshots.** The runner writes one PNG per scene into
+5. **Look at the screenshots.** The runner writes one PNG per scene into
    a `scenes/` folder beside the output file (fixed names — give each
    deck its own `--out` folder or a rebuild overwrites them). They render
    the **authored document state**: entrance transitions and timeline
@@ -97,7 +101,7 @@ write `asset://` uris yourself. Keep individual media files sensible
    still shows fully. Actually open and inspect them — overflowing text,
    overlaps, and bad contrast pass validation but fail the eye. Fix,
    rebuild, look again.
-5. **Deliver** the `.sshow` (see below).
+6. **Deliver** the `.sshow` (see below).
 
 ## Rules that break projects silently
 
@@ -134,8 +138,13 @@ write `asset://` uris yourself. Keep individual media files sensible
 
 ## Runner requirements
 
-- Node 20+ and Playwright with Chromium
-  (`npm i playwright && npx playwright install chromium`).
+- Node 20+ and Playwright with Chromium. Probe with
+  `node scripts/build.mjs --check`. When it reports playwright missing,
+  the fix is `npm i playwright && npx playwright install chromium` —
+  a few hundred MB, once per machine. In a desktop session (Cowork, or
+  any session running on the user's own computer) ask before running it;
+  it is their disk. If they decline, or the environment cannot install
+  Chromium at all, take the packaged handoff below instead.
 - The engine ships with the skill (`engine/sshow.min.js.gz`, the same
   build the references were extracted from) — no network is needed for
   the engine. Network is used only for the font catalog and remote
@@ -143,11 +152,12 @@ write `asset://` uris yourself. Keep individual media files sensible
   fallbacks (the build warns) and remote assets fail the build. Pass
   `--bundle <path-or-url>` to build against a different engine build.
 
-## If the environment cannot run the runner
+## If the runner cannot be installed
 
-Sandboxed agent environments sometimes cannot install Chromium. Do not
-improvise a different pipeline — package the build for the user to run
-locally instead: put your deck folder, the skill's `scripts/` and
+`--check` fails and installing playwright is not an option (a sandbox with
+no network, or the user declined). Do not improvise a different pipeline
+and do not author a deck you cannot build — package the build for the user
+to run themselves instead: put your deck folder, the skill's `scripts/` and
 `engine/` folders (side by side, so `scripts/` finds `../engine/`), and
 a `package.json` with `{ "dependencies": { "playwright": "^1" } }` into
 one directory, then tell the user to run:

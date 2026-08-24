@@ -35,6 +35,7 @@ const VENDORED_BUNDLE = join(__dirname, '..', 'engine', 'sshow.min.js.gz');
 const DEFAULT_BUNDLE = 'https://s.show/statics/sshow/index.min.js';
 const DEFAULT_OUT = 'out/project.sshow';
 const SCREENSHOT_MAX_EDGE = 1280;
+const CHROMIUM_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--ignore-gpu-blocklist', '--enable-unsafe-swiftshader'];
 
 const MIME_BY_EXT = {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp',
@@ -62,14 +63,16 @@ const parseCli = () => {
             allowPositionals: true,
             options: {
                 out: { type: 'string', default: DEFAULT_OUT },
-                bundle: { type: 'string' }
+                bundle: { type: 'string' },
+                check: { type: 'boolean', default: false }
             }
         });
     } catch (error) {
         fail(error.message);
     }
+    if (parsed.values.check) return { check: true };
     if (parsed.positionals.length !== 1) {
-        fail('usage: node build.mjs <actions-file-or-dir> [--out <file.sshow>] [--bundle <path-or-url>]');
+        fail('usage: node build.mjs <actions-file-or-dir> [--out <file.sshow>] [--bundle <path-or-url>]\n         node build.mjs --check');
     }
     return { actionsPath: resolve(parsed.positionals[0]), out: resolve(parsed.values.out), bundle: parsed.values.bundle };
 };
@@ -172,6 +175,26 @@ const importChromium = async () => {
 };
 
 /**
+ * Prerequisite probe (`--check`) — node version, playwright, and a real
+ * chromium launch. Run it before authoring anywhere the runner might not be
+ * installable, so the deck is never written against an environment that
+ * cannot build it.
+ */
+const preflight = async () => {
+    const major = Number(process.versions.node.split('.')[0]);
+    if (major < 20) fail(`node ${process.versions.node} — the runner needs node 20+`);
+    const chromium = await importChromium();
+    let browser;
+    try {
+        browser = await chromium.launch({ args: CHROMIUM_ARGS });
+    } catch (error) {
+        fail(`chromium did not launch — npx playwright install chromium (${error.message})`);
+    }
+    await browser.close();
+    console.error(`  ✓ node ${process.versions.node} + playwright chromium ready`);
+};
+
+/**
  * Resolve the engine bundle: explicit --bundle (path or url) wins, then the
  * vendored gzip shipped with the skill (offline-capable, pinned to the same
  * build the references were extracted from), then the production bundle.
@@ -207,9 +230,7 @@ const serveHarness = async (bundleBytes) => {
 };
 
 const bootEngine = async (chromium, url) => {
-    const browser = await chromium.launch({
-        args: ['--use-gl=angle', '--use-angle=swiftshader', '--ignore-gpu-blocklist', '--enable-unsafe-swiftshader']
-    });
+    const browser = await chromium.launch({ args: CHROMIUM_ARGS });
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
     page.on('pageerror', (error) => warn(`engine: ${error.message}`));
     page.on('console', (msg) => {
@@ -228,7 +249,8 @@ const bootEngine = async (chromium, url) => {
 //#endregion
 
 const main = async () => {
-    const { actionsPath, out, bundle } = parseCli();
+    const { actionsPath, out, bundle, check } = parseCli();
+    if (check) return preflight();
 
     const { paths, baseDir } = await collectActionFiles(actionsPath);
     const files = [];

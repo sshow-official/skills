@@ -145,6 +145,9 @@ python3 scripts/pack.py my-plugin/            # validate + zip
 python3 scripts/pack.py my-plugin/ --check    # validate only
 ```
 
+`python3` is the only prerequisite — the packer is standard library only,
+nothing to install.
+
 Caps enforced everywhere (script, editor, server): ≤ 64 zip entries,
 ≤ 5MB per file uncompressed, ≤ 10MB per package.
 
