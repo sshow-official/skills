@@ -279,9 +279,10 @@ const main = async () => {
 
     const sources = await loadAssetSources(files, baseDir);
     const bundleBytes = await loadBundle(bundle);
-    const { browser } = await launchBrowser();
-
     const { server, url } = await serveHarness(bundleBytes);
+    const { browser, label } = await launchBrowser();
+    if (label !== BROWSERS[0].label) warn(`using ${label} — not the version-pinned chromium, so rendering can differ`);
+
     const page = await bootEngine(browser, url);
 
     try {
