@@ -118,7 +118,7 @@ Animation mode resets the clock without a signal).
 ## document.applyActions — the only write path
 
 ```js
-const { applied, skipped } = await api.document.applyActions(actions, label);
+const { applied, skipped, ids } = await api.document.applyActions(actions, label);
 ```
 
 - `actions` — an array of action objects; see
@@ -129,10 +129,27 @@ const { applied, skipped } = await api.document.applyActions(actions, label);
   **one call = one undo step**.
 - `skipped` — `[{ op, reason }]` for malformed/stale actions. The rest of
   the batch still applies. Always check this and surface failures.
+- `ids` — `{ objects, scenes, variables }`, each a `{ name: id }` map of what
+  this call created. See below.
 
-Actions in one batch can reference each other: give `create_object` a
-`config.id` of your choosing and target that id from a later action in the
-same array.
+### Ids are the engine's — yours are aliases
+
+The `config.id` you put on a create is an **alias for that one call**, not the
+document id. The engine assigns the real id (and only the engine can: ids
+carry a per-session scope, so two people editing together never mint the same
+one) and returns the binding in `ids`.
+
+So: alias a create to reference it from a later action **in the same call**,
+and read `ids` to keep addressing it **after** the call. Never store the alias.
+
+```js
+const { ids } = await api.document.applyActions([
+    { op: 'create_object', type: 'frame', config: { id: 'card', size: { width: 300, height: 200 } } },
+    { op: 'create_object', type: 'text', config: { data: { text: 'Hi' } }, options: { parentObjectId: 'card' } }
+]);
+const cardId = ids.objects.card;          // the id the engine assigned
+await api.document.setSelection([cardId]);  // 'card' would select nothing
+```
 
 ## assets
 

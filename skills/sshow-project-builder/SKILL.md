@@ -54,12 +54,14 @@ Each file is one atomic batch in the engine's `apply_actions` vocabulary:
   not the count. Where the type scale conflicts (F6's derived caps vs
   F1's ranges), the F1 ranges and the example deck win.
 - **The document boots empty — there are no scenes.** Create every scene
-  with `create_scene` and a self-assigned `config.id` (`"s1"`, `"s2"`, …),
-  and put that id in `sceneId` on **every** object op. An object op without
+  with `create_scene` and a `config.id` you choose (`"s1"`, `"s2"`, …), and
+  put that alias in `sceneId` on **every** object op. An object op without
   `sceneId` targets the active scene — in a multi-file build that is a bug
   waiting to happen, so always be explicit.
-- Self-assigned ids (`config.id` on scenes and objects) can be targeted by
-  later actions in the same file and in later files.
+- **A `config.id` is an alias, and it lives for one file.** Each file is applied
+  as one batch; the engine assigns the real ids and the aliases are forgotten
+  afterwards. Target an alias from later actions **in the same file** — never
+  from another file. (One scene per file, below, is what keeps this natural.)
 - One scene per file keeps each file small enough to write reliably and
   makes build errors easy to localize. Order is the filename sort
   (`01-`, `02-`, …). Document-level ops (`set_document`, `set_scene_size`)

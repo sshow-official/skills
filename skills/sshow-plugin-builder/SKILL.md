@@ -127,13 +127,19 @@ Style the panel with the injected theme variables
 8. **Events carry no payload.** A callback firing means "re-query": call
    the read API again. Only three event types exist (`history:update`,
    `ui:modes:edit:changeSelectedObjects`, `motion:animation:timeUpdate`).
-9. **Check `skipped`.** `applyActions` returns `{ applied, skipped }`;
+9. **Check `skipped`.** `applyActions` returns `{ applied, skipped, ids }`;
    malformed actions are skipped with reasons instead of failing the call.
    Surface a message when `skipped.length > 0` — silent no-ops are the top
    source of "the plugin does nothing" reports.
-10. **`assets.register` needs an `ArrayBuffer`** (not a Uint8Array), 10MB
+10. **Ids are the engine's — yours are aliases.** The `config.id` you put on a
+    create is an alias for that one call. The engine assigns the real id (they
+    carry a per-session scope, so collaborators never mint the same one) and
+    returns the binding in `ids`. Reference the alias from later actions in the
+    same call, read `ids` to address the object afterwards, and never store the
+    alias — see [references/api.md](references/api.md).
+11. **`assets.register` needs an `ArrayBuffer`** (not a Uint8Array), 10MB
     max per asset.
-11. **Absent means default, not zero.** Reads omit default-valued fields —
+12. **Absent means default, not zero.** Reads omit default-valued fields —
     `opacity: 1`, identity transform keys, a keyframe's default tween. A
     keyframe with no `tween` is the engine's ease-out, not linear; treating
     absence as zero/linear silently misplays motion.

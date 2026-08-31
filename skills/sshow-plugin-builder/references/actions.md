@@ -26,7 +26,7 @@ with a reason; valid ones commit atomically as one undo step.
 
 | Op | Required | Optional | Notes |
 |---|---|---|---|
-| `create_object` | `type`, `config` | `sceneId`, `options` | `type` ∈ `rect` `circle` `path` `text` `image` `video` `audio` `group` `frame`. Give `config.id` your own id to target it from later actions in the same batch. `options.parentObjectId` creates inside a group/frame; `options.index` sets list position |
+| `create_object` | `type`, `config` | `sceneId`, `options` | `type` ∈ `rect` `circle` `path` `text` `image` `video` `audio` `group` `frame`. Give `config.id` an alias of your own to target it from later actions in the same call — the engine assigns the real id and `applyActions` returns the binding. `options.parentObjectId` creates inside a group/frame; `options.index` sets list position |
 | `update_object` | `id`, `set` | `sceneId` | see set keys below |
 | `delete_object` | `id` | `sceneId` | stale id → skipped |
 | `duplicate_object` | `id` | `sceneId`, `options` | |
@@ -34,7 +34,7 @@ with a reason; valid ones commit atomically as one undo step.
 | `group_objects` | `ids` (≥ 2) | `config`, `sceneId` | ids may include pending in-batch ids |
 | `ungroup` | `id` | `sceneId` | |
 | `convert_to_path` | `id` | `sceneId` | |
-| `create_scene` | `config` | `options` | `config.id` self-assign supported |
+| `create_scene` | `config` | `options` | `config.id` aliases the scene for this call, same as `create_object` |
 | `update_scene` | `set` | `sceneId` | |
 | `delete_scene` / `duplicate_scene` | — | `sceneId` | defaults to active scene |
 | `move_scene` | `sceneId`, `newIndex` | | |

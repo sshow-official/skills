@@ -322,7 +322,7 @@ const main = async () => {
         const sceneIds = await page.evaluate(() => window.sshow.getScenes()
             .getList({ clone: false }).filter((scene) => scene.isVisible()).map((scene) => scene.getId()));
         if (sceneIds.length === 0) {
-            fail('document has no scenes — the engine boots empty; create_scene each slide with a self-assigned id');
+            fail('document has no scenes — the engine boots empty; create_scene each slide with an alias of your own');
         }
 
         // 3. Fonts: await every used family (catalog auto-register + load) so
