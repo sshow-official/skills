@@ -139,7 +139,13 @@ Style the panel with the injected theme variables
     alias — see [references/api.md](references/api.md).
 11. **`assets.register` needs an `ArrayBuffer`** (not a Uint8Array), 10MB
     max per asset.
-12. **Absent means default, not zero.** Reads omit default-valued fields —
+12. **Remember the user's settings.** The panel is destroyed on close, so
+    every option resets unless you persist it — which users experience as a
+    bug. Restore from `api.storage?.get()` right after connect and
+    `api.storage?.set()` on change; it is JSON, 64KB per plugin, and scoped to
+    the app rather than the document. Keep the `?.` — an older editor has no
+    `storage` at all, and without the guard the panel dies before it draws.
+13. **Absent means default, not zero.** Reads omit default-valued fields —
     `opacity: 1`, identity transform keys, a keyframe's default tween. A
     keyframe with no `tween` is the engine's ease-out, not linear; treating
     absence as zero/linear silently misplays motion.

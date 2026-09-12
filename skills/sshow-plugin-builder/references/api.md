@@ -182,6 +182,55 @@ await api.document.applyActions([
 ], 'Edit image');
 ```
 
+## storage
+
+```js
+await api.storage.set('options', { duration: 450, direction: 'left' });
+const options = await api.storage.get('options');   // null when unset
+await api.storage.remove('options');
+const keys = await api.storage.keys();
+```
+
+Your panel is destroyed every time the user closes it, so anything you keep
+in a JS variable is gone on reopen. `storage` is where settings live instead
+— the editor holds one record per plugin id and your entries are the only
+thing you can address in it.
+
+- **Values are JSON.** Objects, arrays, numbers, strings, booleans, null.
+  No ArrayBuffer, no Map/Set, no functions. Storing `undefined` clears the
+  entry.
+- **64KB per plugin**, for the whole record. An over-cap `set` throws and
+  leaves what was already stored intact.
+- **Scope is the app, not the document.** The same record shows up in every
+  project the user opens here, and it does not travel inside a `.sshow`
+  file. Web, Studio and tablet each keep their own. Put user preferences
+  here — anything that belongs to the document has to become objects via
+  `applyActions`.
+- **Survives reinstall and hot reload**, so iterating on your plugin does
+  not wipe the user's settings.
+- **Guard the calls: `api.storage?.get(...)`.** The namespace shipped in
+  2026-09, and a desktop install can pick up your new package while its own
+  engine is still older — `api.storage` is simply absent there. With the `?.`
+  the call short-circuits and your plugin runs on its defaults; without it the
+  panel dies on a `TypeError` before it draws.
+
+Restore on connect and save on change:
+
+```js
+const api = await SSHOWPlugin.connect();
+const config = { duration: 300, direction: 'up', ...(await api.storage.get('options')) };
+render(config);
+
+input.addEventListener('change', () => {
+    config.duration = Number(input.value);
+    api.storage.set('options', config);     // fire and forget
+});
+```
+
+Spread your saved values **over** your defaults, as above: a setting you add
+in a later version is simply absent from an old record, and the default
+fills it in.
+
 ## events
 
 ```js
