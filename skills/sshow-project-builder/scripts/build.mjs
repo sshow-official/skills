@@ -10,12 +10,13 @@
  * server, and plugins use — so a document that builds here loads cleanly
  * everywhere, with no second implementation of the format. Pipeline:
  *
- *   1. Ingest every asset the actions reference (https URL or path relative
- *      to the actions folder) into the engine's content-addressed store and
- *      rewrite the references to `asset://` uris.
- *   2. Apply each action file, in filename order, as one atomic batch.
- *      Malformed actions are reported with per-action reasons and fail the
- *      build — never silently dropped into a broken document.
+ *   1. Ingest every asset the actions reference (https URL, data: URI, or
+ *      path relative to the actions folder) into the engine's
+ *      content-addressed store and rewrite the references to `asset://` uris.
+ *   2. Apply every action file, in filename order, as one atomic batch — an
+ *      alias one file declares is live in every later one. Malformed actions
+ *      are reported with per-action reasons and fail the build — never
+ *      silently dropped into a broken document.
  *   3. Capture one screenshot per scene (long edge 1280) for visual review,
  *      plus editor-idiom scene thumbnails for dashboard previews.
  *   4. Pack via the engine's own `.sshow` writer (fonts settled/embedded,
@@ -32,7 +33,7 @@ import { gunzipSync } from 'node:zlib';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const HARNESS_FILE = join(__dirname, 'harness.html');
 const VENDORED_BUNDLE = join(__dirname, '..', 'engine', 'sshow.min.js.gz');
-const DEFAULT_BUNDLE = 'https://s.show/statics/sshow/index.min.js';
+const DEFAULT_BUNDLE = 'https://s.show/sshow/index.min.js';
 const DEFAULT_OUT = 'out/project.sshow';
 const SCREENSHOT_MAX_EDGE = 1280;
 const CHROMIUM_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--ignore-gpu-blocklist', '--enable-unsafe-swiftshader'];
@@ -132,9 +133,14 @@ const walkSrc = (node, visit) => {
 };
 
 const isRemote = (src) => src.startsWith('https://') || src.startsWith('http://');
-const isIngestable = (src) => src.length > 0 && !src.startsWith('asset://') && !src.startsWith('data:');
+const isDataUri = (src) => src.startsWith('data:');
+const isIngestable = (src) => src.length > 0 && !src.startsWith('asset://');
 
-/** Fetch/read every referenced asset's bytes. Keyed by the literal src string. */
+/**
+ * Fetch/read every referenced asset's bytes. Keyed by the literal src string.
+ * The type comes from the file extension, else — a URL without one, a data:
+ * URI — from the type the response or the URI declares.
+ */
 const loadAssetSources = async (files, baseDir) => {
     const sources = new Map();
     for (const { actions } of files) {
@@ -144,19 +150,23 @@ const loadAssetSources = async (files, baseDir) => {
     }
 
     for (const src of sources.keys()) {
-        const name = basename(new URL(src, 'file:///').pathname) || 'asset';
-        const ext = extname(name).slice(1).toLowerCase();
-        const mimeType = MIME_BY_EXT[ext];
-        if (!mimeType) fail(`unsupported asset extension '.${ext}': ${src}`);
-
+        const label = isDataUri(src) ? `${src.slice(0, 40)}…` : src;
         let bytes;
-        if (isRemote(src)) {
-            const response = await fetch(src).catch((error) => fail(`asset fetch failed: ${src} — ${error.message}`));
-            if (!response.ok) fail(`asset fetch failed: ${src} — HTTP ${response.status}`);
+        let declaredType;
+        if (isRemote(src) || isDataUri(src)) {
+            const response = await fetch(src).catch((error) => fail(`asset fetch failed: ${label} — ${error.message}`));
+            if (!response.ok) fail(`asset fetch failed: ${label} — HTTP ${response.status}`);
             bytes = Buffer.from(await response.arrayBuffer());
+            declaredType = response.headers.get('content-type')?.split(';')[0].trim().toLowerCase();
         } else {
             bytes = await readFile(resolve(baseDir, src)).catch(() => fail(`asset not found: ${resolve(baseDir, src)}`));
         }
+
+        // A data: URI carries no file name (the engine's own idiom: null).
+        const name = isDataUri(src) ? null : basename(isRemote(src) ? new URL(src).pathname : src) || null;
+        const mimeType = MIME_BY_EXT[extname(name ?? '').slice(1).toLowerCase()]
+            ?? (Object.values(MIME_BY_EXT).includes(declaredType) ? declaredType : null);
+        if (!mimeType) fail(`unsupported asset type: ${label} — use ${Object.keys(MIME_BY_EXT).join('/')}`);
         sources.set(src, { bytes, mimeType, originalName: name });
     }
     return sources;
@@ -254,7 +264,8 @@ const bootEngine = async (browser, url) => {
     page.on('pageerror', (error) => warn(`engine: ${error.message}`));
     page.on('console', (msg) => {
         if (msg.type() !== 'error' && msg.type() !== 'warning') return;
-        if (msg.text().includes('GL Driver Message')) return; // SwiftShader perf noise
+        // SwiftShader perf noise, and pixi noting a snapshot freed a texture it still had bound
+        if (/GL Driver Message|\[BindGroup\]/.test(msg.text())) return;
         warn(`engine: ${msg.text()}`);
     });
 
@@ -286,36 +297,59 @@ const main = async () => {
     const page = await bootEngine(browser, url);
 
     try {
-        // 1. Mint assets into the content-addressed store, rewrite src → asset://
+        // 1. Mint assets into the content-addressed store, rewrite src → asset://,
+        //    and measure each picture and clip (null when the browser can't decode it).
         const uris = new Map();
+        const pixels = new Map();
         for (const [src, { bytes, mimeType, originalName }] of sources) {
-            const uri = await page.evaluate(({ b64, mimeType, originalName }) => {
+            const { uri, size } = await page.evaluate(async ({ b64, mimeType, originalName }) => {
                 const bin = atob(b64);
                 const data = new Uint8Array(bin.length);
                 for (let i = 0; i < bin.length; i++) data[i] = bin.charCodeAt(i);
-                return window.sshow.getAssets().register(data.buffer, { mimeType, originalName }).uri;
+                const { uri, url } = window.sshow.getAssets().register(data.buffer, { mimeType, originalName });
+                const media = mimeType.startsWith('image/') ? new Image() : mimeType.startsWith('video/') ? document.createElement('video') : null;
+                const size = media && await new Promise((done) => {
+                    media.onload = media.onloadedmetadata = () => done({
+                        width: media.naturalWidth || media.videoWidth,
+                        height: media.naturalHeight || media.videoHeight
+                    });
+                    media.onerror = () => done(null);
+                    media.src = url;
+                });
+                return { uri, size };
             }, { b64: bytes.toString('base64'), mimeType, originalName });
             uris.set(src, uri);
+            if (size?.width && size?.height) pixels.set(uri, { src: isDataUri(src) ? 'its data: URI' : src, ...size });
         }
         for (const { actions } of files) {
             walkSrc(actions, (src) => uris.get(src));
         }
 
-        // 2. Apply each file as one atomic batch; any skipped action fails the build.
-        let applied = 0;
-        const skipped = [];
-        for (const { file, actions } of files) {
-            const result = await page.evaluate((actions) => {
-                const { batch, applied, skipped } = window.buildActionBatch(window.sshow, actions, 'sshow-project-builder');
+        // 2. Apply every file, in filename order, as ONE atomic batch — so an
+        //    alias any file declares is live for every action after it. Any
+        //    skipped action fails the build, named by its file and position.
+        const origins = files.flatMap(({ file, actions }) => actions.map((_, index) => `${basename(file)} #${index + 1}`));
+        const { applied, skipped, ids, error } = await page.evaluate((actions) => {
+            const { batch, applied, skipped, ids } = window.buildActionBatch(window.sshow, actions, 'sshow-project-builder');
+            try {
                 if (applied > 0) window.sshow.getHistory().execute(batch);
-                return { applied, skipped };
-            }, actions);
-            applied += result.applied;
-            skipped.push(...result.skipped.map((entry) => ({ file: basename(file), ...entry })));
-        }
+            } catch (error) {
+                return { applied, skipped, ids, error: error?.message ?? String(error) };
+            }
+            return { applied, skipped, ids };
+        }, files.flatMap(({ actions }) => actions));
         if (skipped.length > 0) {
-            for (const { file, op, reason } of skipped) console.error(`  ✗ ${file}: ${op} — ${reason}`);
+            for (const { index, op, reason } of skipped) console.error(`  ✗ ${origins[index]}: ${op} — ${reason}`);
             fail(`${skipped.length} action(s) rejected — fix the reasons above and rebuild`);
+        }
+        if (error) {
+            // Only running the batch finds some mistakes (a sceneId that is not
+            // the scene holding the object), and the engine names the id it
+            // minted — name the author's alias beside it.
+            const named = Object.entries({ ...ids.objects, ...ids.scenes, ...ids.variables })
+                .filter(([, id]) => new RegExp(`\\b${id}\\b`).test(error))
+                .map(([alias, id]) => `${id} is '${alias}'`);
+            fail(`the actions could not be applied — ${error}${named.length > 0 ? ` (${named.join(', ')})` : ''}`);
         }
         if (applied === 0) fail('no actions applied');
 
@@ -325,18 +359,39 @@ const main = async () => {
             fail('document has no scenes — the engine boots empty; create_scene each slide with an alias of your own');
         }
 
+        // Media draws stretched to its box (there is no fit or cover) — name
+        // every picture or clip whose box does not keep its asset's ratio.
+        const boxes = await page.evaluate(() => window.sshow.getScenes().getList({ clone: false }).flatMap((scene) =>
+            [...scene.getObjects().getMap({ clone: false }).values()]
+                .filter((object) => object.getType() === 'image' || object.getType() === 'video')
+                .map((object) => ({ scene: scene.getName(), name: object.getName(), src: object.getData().src, ...object.getSize() }))));
+        for (const { scene, name, src, width, height } of boxes) {
+            const asset = pixels.get(src);
+            const ratio = asset && asset.width / asset.height;
+            if (!asset || Math.abs(height - width / ratio) <= Math.max(1, height * 0.01)) continue;
+            warn(`${scene} › '${name}' is ${width}×${height} but ${asset.src} is ${asset.width}×${asset.height} — it draws stretched; keep the ratio (e.g. ${width}×${Math.round(width / ratio)})`);
+        }
+
         // 3. Fonts: await every used family (catalog auto-register + load) so
-        //    screenshots and the pack see final glyphs; surface what never resolved.
+        //    screenshots and the pack see final glyphs; surface what never
+        //    loaded. waitForReady alone passes an unknown name (the browser
+        //    vouches for a family it has no face for), so ask isLoaded.
         const unresolvedFonts = await page.evaluate(async () => {
             const fonts = window.sshow.getFonts();
             const missing = [];
             for (const family of fonts.collectUsedFonts()) {
-                if (!(await fonts.waitForReady(family))) missing.push(family);
+                await fonts.waitForReady(family);
+                if (!fonts.isLoaded(family)) missing.push(family);
             }
-            return missing;
+            if (missing.length === 0) return [];
+            const reachable = (await fonts.getCatalog()).length > 0;
+            return missing.map((family) => ({
+                family,
+                reason: fonts.has(family) ? 'its files did not load' : reachable ? 'it is not in the catalog' : 'the font catalog is unreachable'
+            }));
         });
-        for (const family of unresolvedFonts) {
-            warn(`font '${family}' did not resolve (not in the catalog / unreachable) — it will render with a system fallback`);
+        for (const { family, reason } of unresolvedFonts) {
+            warn(`font '${family}' did not resolve (${reason}) — it will render with a system fallback`);
         }
 
         // 4. Screenshots (visual review) + editor-idiom thumbnails, per visible scene.
@@ -349,7 +404,7 @@ const main = async () => {
         for (const [index, sceneId] of sceneIds.entries()) {
             const dataUrl = await page.evaluate(async ({ sceneId, resolution }) => {
                 const scenes = window.sshow.getScenes();
-                const thumbnail = await scenes.getById(sceneId).getSnapshot({ format: 'webp' });
+                const thumbnail = await scenes.getById(sceneId).getSnapshot({ format: 'webp', preview: true });
                 scenes._setThumbnail(sceneId, thumbnail);
                 return scenes.getById(sceneId).getSnapshot({ format: 'png', quality: 1, resolution, type: 'base64' });
             }, { sceneId, resolution });

@@ -17,13 +17,13 @@
         {
             "op": "create_scene",
             "config": {
-                "id": "s1",
+                "id": "cover",
                 "name": "Cover"
             }
         },
         {
             "op": "update_scene",
-            "sceneId": "s1",
+            "sceneId": "cover",
             "set": {
                 "style": {
                     "fills": [
@@ -34,12 +34,28 @@
                     ],
                     "strokes": [],
                     "effects": []
+                },
+                "motion": {
+                    "transitions": {
+                        "default": {
+                            "type": "easing",
+                            "easing": {
+                                "duration": 600,
+                                "curve": [
+                                    0.16,
+                                    1,
+                                    0.3,
+                                    1
+                                ]
+                            }
+                        }
+                    }
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s1",
+            "sceneId": "cover",
             "type": "circle",
             "config": {
                 "name": "halo",
@@ -48,8 +64,8 @@
                     "height": 1000
                 },
                 "transform": {
-                    "x": 1460,
-                    "y": 220
+                    "x": 1464,
+                    "y": 224
                 },
                 "style": {
                     "fills": [
@@ -83,7 +99,7 @@
         },
         {
             "op": "create_object",
-            "sceneId": "s1",
+            "sceneId": "cover",
             "type": "image",
             "config": {
                 "name": "mark",
@@ -93,7 +109,7 @@
                 },
                 "transform": {
                     "x": 960,
-                    "y": 330
+                    "y": 328
                 },
                 "data": {
                     "src": "assets/mark.png"
@@ -102,7 +118,7 @@
         },
         {
             "op": "create_object",
-            "sceneId": "s1",
+            "sceneId": "cover",
             "type": "text",
             "config": {
                 "name": "title",
@@ -129,30 +145,14 @@
                     "textAlign": "center",
                     "autoSize": true,
                     "lineHeight": 146,
-                    "verticalAlign": "middle"
-                },
-                "motion": {
-                    "transitions": {
-                        "opacity": {
-                            "type": "easing",
-                            "delay": 0,
-                            "easing": {
-                                "duration": 600,
-                                "curve": [
-                                    0.25,
-                                    0,
-                                    0.05,
-                                    1
-                                ]
-                            }
-                        }
-                    }
+                    "verticalAlign": "middle",
+                    "letterSpacing": -3
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s1",
+            "sceneId": "cover",
             "type": "text",
             "config": {
                 "name": "subtitle",
@@ -178,7 +178,7 @@
                     "fontWeight": 400,
                     "textAlign": "center",
                     "autoSize": true,
-                    "lineHeight": 56,
+                    "lineHeight": 50,
                     "verticalAlign": "middle"
                 }
             }

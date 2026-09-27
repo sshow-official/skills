@@ -23,9 +23,10 @@ If your agent does NOT support Agent Skills:
 ## Skill index
 
 - `skills/sshow-project-builder/SKILL.md` — Builds SSHOW projects:
-  multi-scene .sshow documents with design, media, and motion, written as
-  action-batch JSON and compiled through the real engine by a bundled
-  runner. Use for creating SSHOW presentations, decks, or stories.
+  multi-scene .sshow documents with design, media, motion, and
+  interactivity, written as action-batch JSON and compiled through the real
+  engine by a bundled runner. Use for creating SSHOW presentations, decks,
+  stories, or interactive prototypes.
 - `skills/sshow-plugin-builder/SKILL.md` — Builds SSHOW editor plugins: a
   plugin.json manifest plus one self-contained HTML screen, packaged as a
   .sshowplugin zip. Use for creating, packaging, testing, or publishing

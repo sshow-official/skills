@@ -3,13 +3,13 @@
         {
             "op": "create_scene",
             "config": {
-                "id": "s3",
+                "id": "closing",
                 "name": "Closing"
             }
         },
         {
             "op": "update_scene",
-            "sceneId": "s3",
+            "sceneId": "closing",
             "set": {
                 "style": {
                     "fills": [
@@ -20,12 +20,28 @@
                     ],
                     "strokes": [],
                     "effects": []
+                },
+                "motion": {
+                    "transitions": {
+                        "default": {
+                            "type": "easing",
+                            "easing": {
+                                "duration": 600,
+                                "curve": [
+                                    0.16,
+                                    1,
+                                    0.3,
+                                    1
+                                ]
+                            }
+                        }
+                    }
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s3",
+            "sceneId": "closing",
             "type": "image",
             "config": {
                 "name": "mark",
@@ -44,7 +60,7 @@
         },
         {
             "op": "create_object",
-            "sceneId": "s3",
+            "sceneId": "closing",
             "type": "text",
             "config": {
                 "name": "cta",
@@ -70,14 +86,15 @@
                     "fontWeight": 700,
                     "textAlign": "center",
                     "autoSize": true,
-                    "lineHeight": 97,
-                    "verticalAlign": "middle"
+                    "lineHeight": 102,
+                    "verticalAlign": "middle",
+                    "letterSpacing": -2
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s3",
+            "sceneId": "closing",
             "type": "rect",
             "config": {
                 "name": "underline",
@@ -87,7 +104,7 @@
                 },
                 "transform": {
                     "x": 960,
-                    "y": 670
+                    "y": 672
                 },
                 "style": {
                     "fills": [
@@ -107,6 +124,135 @@
                         4
                     ]
                 }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "closing",
+            "type": "frame",
+            "config": {
+                "id": "replay",
+                "name": "replay",
+                "size": {
+                    "width": 320,
+                    "height": 88
+                },
+                "transform": {
+                    "x": 960,
+                    "y": 800
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#7C6CF0"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "radius": [
+                        44,
+                        44,
+                        44,
+                        44
+                    ]
+                },
+                "motion": {
+                    "animations": {
+                        "hover": {
+                            "duration": 200,
+                            "keyframes": {
+                                "transform.scaleX": [
+                                    {
+                                        "time": 0,
+                                        "value": 1
+                                    },
+                                    {
+                                        "time": 200,
+                                        "value": 1.06
+                                    }
+                                ],
+                                "transform.scaleY": [
+                                    {
+                                        "time": 0,
+                                        "value": 1
+                                    },
+                                    {
+                                        "time": 200,
+                                        "value": 1.06
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "interaction": {
+                    "rules": [
+                        {
+                            "id": "replay",
+                            "trigger": {
+                                "type": "click"
+                            },
+                            "actions": [
+                                {
+                                    "type": "goToScene",
+                                    "sceneId": "cover"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "lift",
+                            "trigger": {
+                                "type": "hovering"
+                            },
+                            "actions": [
+                                {
+                                    "type": "play",
+                                    "name": "hover",
+                                    "fill": "hold"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "op": "create_object",
+            "sceneId": "closing",
+            "type": "text",
+            "config": {
+                "name": "replay-label",
+                "transform": {
+                    "x": 160,
+                    "y": 44,
+                    "anchorX": 0.5,
+                    "anchorY": 0.5
+                },
+                "style": {
+                    "fills": [
+                        {
+                            "type": "solid",
+                            "color": "#F2F1F7"
+                        }
+                    ],
+                    "strokes": [],
+                    "effects": []
+                },
+                "data": {
+                    "text": "Watch again",
+                    "fontSize": 28,
+                    "fontWeight": 600,
+                    "textAlign": "center",
+                    "autoSize": true,
+                    "lineHeight": 40,
+                    "verticalAlign": "middle"
+                }
+            },
+            "options": {
+                "parentObjectId": "replay"
             }
         }
     ]

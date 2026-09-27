@@ -3,13 +3,13 @@
         {
             "op": "create_scene",
             "config": {
-                "id": "s2",
+                "id": "features",
                 "name": "Features"
             }
         },
         {
             "op": "update_scene",
-            "sceneId": "s2",
+            "sceneId": "features",
             "set": {
                 "style": {
                     "fills": [
@@ -25,12 +25,26 @@
         },
         {
             "op": "update_scene",
-            "sceneId": "s2",
+            "sceneId": "features",
             "set": {
                 "motion": {
                     "animations": {
                         "default": {
                             "duration": 2400
+                        }
+                    },
+                    "transitions": {
+                        "default": {
+                            "type": "easing",
+                            "easing": {
+                                "duration": 600,
+                                "curve": [
+                                    0.16,
+                                    1,
+                                    0.3,
+                                    1
+                                ]
+                            }
                         }
                     }
                 }
@@ -38,7 +52,7 @@
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "text",
             "config": {
                 "name": "heading",
@@ -64,14 +78,15 @@
                     "fontWeight": 700,
                     "textAlign": "center",
                     "autoSize": true,
-                    "lineHeight": 80,
-                    "verticalAlign": "middle"
+                    "lineHeight": 83,
+                    "verticalAlign": "middle",
+                    "letterSpacing": -1.5
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "rect",
             "config": {
                 "name": "card-design",
@@ -134,7 +149,7 @@
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "rect",
             "config": {
                 "name": "card-animate",
@@ -197,7 +212,7 @@
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "rect",
             "config": {
                 "name": "card-present",
@@ -260,7 +275,7 @@
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "text",
             "config": {
                 "name": "label-design",
@@ -286,14 +301,14 @@
                     "fontWeight": 700,
                     "textAlign": "center",
                     "autoSize": true,
-                    "lineHeight": 49,
+                    "lineHeight": 55,
                     "verticalAlign": "middle"
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "text",
             "config": {
                 "name": "copy-design",
@@ -324,14 +339,14 @@
                     "textAlign": "center",
                     "autoSize": false,
                     "breakWords": true,
-                    "lineHeight": 41,
+                    "lineHeight": 37,
                     "verticalAlign": "middle"
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "text",
             "config": {
                 "name": "label-animate",
@@ -357,14 +372,14 @@
                     "fontWeight": 700,
                     "textAlign": "center",
                     "autoSize": true,
-                    "lineHeight": 49,
+                    "lineHeight": 55,
                     "verticalAlign": "middle"
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "text",
             "config": {
                 "name": "copy-animate",
@@ -395,14 +410,14 @@
                     "textAlign": "center",
                     "autoSize": false,
                     "breakWords": true,
-                    "lineHeight": 41,
+                    "lineHeight": 37,
                     "verticalAlign": "middle"
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "text",
             "config": {
                 "name": "label-present",
@@ -428,14 +443,14 @@
                     "fontWeight": 700,
                     "textAlign": "center",
                     "autoSize": true,
-                    "lineHeight": 49,
+                    "lineHeight": 55,
                     "verticalAlign": "middle"
                 }
             }
         },
         {
             "op": "create_object",
-            "sceneId": "s2",
+            "sceneId": "features",
             "type": "text",
             "config": {
                 "name": "copy-present",
@@ -466,7 +481,7 @@
                     "textAlign": "center",
                     "autoSize": false,
                     "breakWords": true,
-                    "lineHeight": 41,
+                    "lineHeight": 37,
                     "verticalAlign": "middle"
                 }
             }
