@@ -39,6 +39,7 @@ Text lengths count as JavaScript does: an emoji is 2 chars.
 | `id` length | ≤ 100 chars |
 | `name` length | ≤ 100 chars |
 | `description` length | ≤ 2000 chars |
+| `description_localized` | `en` · `ko` keys, each ≤ 2000 chars |
 | `author` length | ≤ 100 chars |
 | Icon formats | png · svg · jpg · jpeg · webp |
 

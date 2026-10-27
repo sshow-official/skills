@@ -24,6 +24,8 @@ PACKAGE_EXT = ".sshowplugin"
 ICON_EXTS = {"png", "svg", "jpg", "jpeg", "webp"}
 RESERVED_IDS = {"installed", "mine", "submit"}
 API_VERSION = 1
+# Tags description_localized may use: the languages the editor shows (BCP 47).
+LANGUAGE_TAGS = ("en", "ko")
 
 MAX_ENTRIES = 64
 MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -102,6 +104,21 @@ def validate(plugin_dir: Path):
             errors.append("description — string when present")
         elif js_length(description.strip()) > MAX_DESCRIPTION:
             errors.append(f"description — over {MAX_DESCRIPTION} chars")
+
+    # The editor and server drop a malformed translation without a word, so
+    # this is where a wrong one gets caught.
+    localized = manifest.get("description_localized")
+    if localized is not None:
+        if not isinstance(localized, dict):
+            errors.append('description_localized — object of language tag to text when present, e.g. {"ko": "…"}')
+        else:
+            for tag, copy in localized.items():
+                if tag not in LANGUAGE_TAGS:
+                    errors.append(f"description_localized — '{tag}' is not a language the editor shows ({', '.join(LANGUAGE_TAGS)}; Korean is ko)")
+                elif not isinstance(copy, str) or not copy.strip():
+                    errors.append(f"description_localized.{tag} — non-empty string required")
+                elif js_length(copy.strip()) > MAX_DESCRIPTION:
+                    errors.append(f"description_localized.{tag} — over {MAX_DESCRIPTION} chars")
 
     author = manifest.get("author")
     if author is not None:

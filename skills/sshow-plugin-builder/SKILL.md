@@ -49,6 +49,7 @@ that one global. There is no build step and no dependency install.
     "api": 1,
     "main": "ui.html",
     "description": "Inserts a greeting card.",
+    "description_localized": { "ko": "인사 카드를 넣습니다." },
     "author": "SSHOW",
     "icon": "icon.svg"
 }
@@ -65,6 +66,11 @@ that one global. There is no build step and no dependency install.
   listing; always provide them for anything you intend to publish. In the
   catalog the author line shows the verified submitter account — the
   manifest `author` is what the editor's plugin list displays.
+- `description_localized` — optional translations of `description`, keyed
+  by language tag: `ko` (Korean) or `en`. Write `description` in English;
+  the editor, the catalog and Studio show the translation for their
+  language and fall back to `description`. Use `ko`, not `kr` or `ko-KR` —
+  the editor ignores any other key, and the packer refuses it.
 
 Unknown manifest fields are silently dropped — do not invent fields.
 
