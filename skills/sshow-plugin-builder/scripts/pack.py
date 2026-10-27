@@ -25,7 +25,7 @@ ICON_EXTS = {"png", "svg", "jpg", "jpeg", "webp"}
 RESERVED_IDS = {"installed", "mine", "submit"}
 API_VERSION = 1
 # Tags description_localized may use: the languages the editor shows (BCP 47).
-LANGUAGE_TAGS = ("en", "ko")
+LANGUAGE_TAGS = {"en", "ko"}
 
 MAX_ENTRIES = 64
 MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -114,7 +114,7 @@ def validate(plugin_dir: Path):
         else:
             for tag, copy in localized.items():
                 if tag not in LANGUAGE_TAGS:
-                    errors.append(f"description_localized — '{tag}' is not a language the editor shows ({', '.join(LANGUAGE_TAGS)}; Korean is ko)")
+                    errors.append(f"description_localized — '{tag}' is not a language the editor shows ({'/'.join(sorted(LANGUAGE_TAGS))}; Korean is ko)")
                 elif not isinstance(copy, str) or not copy.strip():
                     errors.append(f"description_localized.{tag} — non-empty string required")
                 elif js_length(copy.strip()) > MAX_DESCRIPTION:

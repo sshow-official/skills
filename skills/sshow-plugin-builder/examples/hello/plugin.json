@@ -5,6 +5,7 @@
     "api": 1,
     "main": "ui.html",
     "description": "Inserts a greeting card.",
+    "description_localized": { "ko": "인사 카드를 넣습니다." },
     "author": "SSHOW",
     "icon": "icon.svg"
 }
