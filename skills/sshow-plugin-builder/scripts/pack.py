@@ -115,8 +115,8 @@ def check_param(param, field, errors):
         bounds = [value, param.get("min"), param.get("max"), param.get("step")]
         if not all(is_number(bound) for bound in bounds) or bounds[3] <= 0 or not bounds[1] <= value <= bounds[2]:
             errors.append(f"{field} — finite default within min…max, step > 0")
-        unit = param.get("unit")
-        if unit is not None and (not isinstance(unit, str) or js_length(unit) > MAX_UNIT):
+        # Optional, but when the key is there (even null) it must be a short string.
+        if "unit" in param and (not isinstance(param["unit"], str) or js_length(param["unit"]) > MAX_UNIT):
             errors.append(f"{field}.unit — string, at most {MAX_UNIT} chars")
         return param.get("max") if is_number(param.get("max")) else None
     if kind == "color":
