@@ -23,11 +23,13 @@ python3 scripts/pack.py my-plugin/ --out dist/plugin.sshowplugin
 It packs every file in the folder except hidden ones (`.git`,
 `.DS_Store`) and earlier `.sshowplugin` packages. `main` and `icon` must
 name one of those files by its path inside the folder — the editor looks
-them up by exactly that name.
+them up by exactly that name. A dynamic pack (`dynamic.json`) packs just
+its manifest and icon into a `.sshowdynamic` — its shaders ride in the
+manifest, and only the editor compiles them: drop the package on it.
 
 Hard caps. The packer and the server enforce every row; the editor
 checks only the entry count and the size of the files it reads
-(`plugin.json`, `main`, the icon), and leaves the rest to submission — so
+(`plugin.json` or `dynamic.json`, `main`, the icon), and leaves the rest to submission — so
 an over-long description imports fine locally and is refused at publish.
 Text lengths count as JavaScript does: an emoji is 2 chars.
 
@@ -35,6 +37,7 @@ Text lengths count as JavaScript does: an emoji is 2 chars.
 |---|---|
 | Zip entries | ≤ 64 |
 | Per-file size (uncompressed) | ≤ 5MB |
+| Manifest (`plugin.json` · `dynamic.json`, uncompressed) | ≤ 256KB |
 | Whole package | ≤ 10MB |
 | `id` length | ≤ 100 chars |
 | `name` length | ≤ 100 chars |

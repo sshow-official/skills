@@ -57,7 +57,7 @@ that one global. There is no build step and no dependency install.
 
 - `id` — lowercase reverse-domain, `[a-z0-9.-]` only, no `..`, ≤ 100 chars.
   Pick a domain you control: the first person to publish an id owns it
-  forever. Never reuse `installed`, `mine`, or `submit`.
+  forever. Never reuse `installed`, `mine`, `submit` or `builtin`.
 - `version` — exact `x.y.z`. Every submission must be strictly higher than
   every earlier one, so bump before repackaging for publish.
 - `api` — must be the integer `1`. Anything else is refused at load.
@@ -70,7 +70,9 @@ that one global. There is no build step and no dependency install.
   by language tag: `ko` (Korean) or `en`. Write `description` in English;
   the editor, the catalog and Studio show the translation for their
   language and fall back to `description`. Use `ko`, not `kr` or `ko-KR` —
-  the editor ignores any other key, and the packer refuses it.
+  the editor ignores any other key, and the packer refuses it. The same
+  goes for a dynamic's `label_localized` and a param's `label_localized`
+  in a dynamic pack (`dynamic.json`).
 
 Unknown manifest fields are silently dropped — do not invent fields.
 
