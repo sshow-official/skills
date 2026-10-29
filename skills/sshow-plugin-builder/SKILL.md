@@ -45,6 +45,7 @@ that one global. There is no build step and no dependency install.
 {
     "id": "com.example.hello",
     "name": "Hello",
+    "name_localized": { "ko": "안녕" },
     "version": "1.0.0",
     "api": 1,
     "main": "ui.html",
@@ -57,7 +58,8 @@ that one global. There is no build step and no dependency install.
 
 - `id` — lowercase reverse-domain, `[a-z0-9.-]` only, no `..`, ≤ 100 chars.
   Pick a domain you control: the first person to publish an id owns it
-  forever. Never reuse `installed`, `mine`, `submit` or `builtin`.
+  forever. Never reuse `installed`, `mine`, `submit` or `builtin`, and leave
+  ids under `app.sshow.` to SSHOW — only SSHOW publishes those.
 - `version` — exact `x.y.z`. Every submission must be strictly higher than
   every earlier one, so bump before repackaging for publish.
 - `api` — must be the integer `1`. Anything else is refused at load.
@@ -66,10 +68,11 @@ that one global. There is no build step and no dependency install.
   listing; always provide them for anything you intend to publish. In the
   catalog the author line shows the verified submitter account — the
   manifest `author` is what the editor's plugin list displays.
-- `description_localized` — optional translations of `description`, keyed
-  by language tag: `ko` (Korean) or `en`. Write `description` in English;
-  the editor, the catalog and Studio show the translation for their
-  language and fall back to `description`. Use `ko`, not `kr` or `ko-KR` —
+- `name_localized` · `description_localized` — optional translations of
+  `name` and `description`, keyed by language tag: `ko` (Korean) or `en`.
+  Write `name` and `description` in English; the editor, the catalog and
+  Studio show the translation for their language and fall back to the
+  English. Use `ko`, not `kr` or `ko-KR` —
   the editor ignores any other key, and the packer refuses it. The same
   goes for a dynamic's `label_localized` and a param's `label_localized`
   in a dynamic pack (`dynamic.json`).

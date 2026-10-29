@@ -29,7 +29,7 @@ KINDS = {"plugin.json": ".sshowplugin", "dynamic.json": ".sshowdynamic"}
 ICON_EXTS = {"png", "svg", "jpg", "jpeg", "webp"}
 RESERVED_IDS = {"installed", "mine", "submit", "builtin"}
 API_VERSION = 1
-# Tags description_localized may use: the languages the editor shows (BCP 47).
+# Tags a <field>_localized copy map may use: the languages the editor shows (BCP 47).
 LANGUAGE_TAGS = {"en", "ko"}
 
 MAX_ENTRIES = 64
@@ -223,6 +223,7 @@ def validate(folder: Path):
         errors.append("name — non-empty string required")
     elif js_length(name.strip()) > MAX_NAME:
         errors.append(f"name — over {MAX_NAME} chars")
+    check_localized(manifest.get("name_localized"), "name_localized", MAX_NAME, errors)
 
     version = manifest.get("version")
     if not isinstance(version, str) or not VERSION_PATTERN.fullmatch(version):

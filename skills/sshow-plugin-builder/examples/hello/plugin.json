@@ -1,6 +1,7 @@
 {
     "id": "com.example.hello",
     "name": "Hello",
+    "name_localized": { "ko": "안녕" },
     "version": "1.0.0",
     "api": 1,
     "main": "ui.html",
