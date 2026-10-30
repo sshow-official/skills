@@ -31,3 +31,8 @@ If your agent does NOT support Agent Skills:
   plugin.json manifest plus one self-contained HTML screen, packaged as a
   .sshowplugin zip. Use for creating, packaging, testing, or publishing
   SSHOW plugins.
+- `skills/sshow-dynamic-builder/SKILL.md` — Builds SSHOW dynamic packs: GLSL
+  shader paints and effects declared in a dynamic.json manifest, compiled
+  and previewed through the real engine by a bundled runner, packaged as a
+  .sshowdynamic zip. Use for creating, testing, packaging, or publishing
+  shader fills, animated backgrounds, or effects for SSHOW.

@@ -12,7 +12,8 @@
  * hash. Vendoring the bundle keeps builds offline-capable and
  * deterministic (sandboxed agent environments often cannot reach s.show).
  * The plugin skill gets the same guide.md — a plugin's applyActions speaks
- * this vocabulary, and a skill installed alone must still carry it.
+ * this vocabulary, and a skill installed alone must still carry it. The
+ * dynamic skill gets the same engine — its runner compiles packs with it.
  * Maintainer tool — run it whenever a new engine build ships.
  */
 
@@ -28,6 +29,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ENGINE_DIR = join(__dirname, '..', 'engine');
 const REFERENCES_DIR = join(__dirname, '..', 'references');
 const PLUGIN_REFERENCES_DIR = join(__dirname, '..', '..', 'sshow-plugin-builder', 'references');
+const DYNAMIC_ENGINE_DIR = join(__dirname, '..', '..', 'sshow-dynamic-builder', 'engine');
 const DEFAULT_BUNDLE = 'https://s.show/sshow/index.min.js';
 
 const fail = (message) => {
@@ -68,8 +70,11 @@ const main = async () => {
         fail('bundle is missing agent exports (ACTIONS_SCHEMA / ACTION_OPS / AGENT_GUIDE)');
     }
 
-    await mkdir(ENGINE_DIR, { recursive: true });
-    await writeFile(join(ENGINE_DIR, 'sshow.min.js.gz'), gzipSync(bytes, { level: 9 }));
+    const engine = gzipSync(bytes, { level: 9 });
+    for (const dir of [ENGINE_DIR, DYNAMIC_ENGINE_DIR]) {
+        await mkdir(dir, { recursive: true });
+        await writeFile(join(dir, 'sshow.min.js.gz'), engine);
+    }
 
     await mkdir(REFERENCES_DIR, { recursive: true });
     const date = new Date().toISOString().slice(0, 10);
@@ -111,7 +116,7 @@ const main = async () => {
     await writeFile(join(REFERENCES_DIR, 'guide.md'), guide);
     await writeFile(join(PLUGIN_REFERENCES_DIR, 'guide.md'), guide);
 
-    console.log(`  ✓ engine/sshow.min.js.gz, references/actions.md, references/guide.md + the plugin skill's guide.md (bundle ${stamp})`);
+    console.log(`  ✓ engine/sshow.min.js.gz, references/actions.md, references/guide.md + the plugin skill's guide.md and the dynamic skill's engine (bundle ${stamp})`);
 };
 
 main();

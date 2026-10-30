@@ -1,5 +1,5 @@
 <!-- GENERATED from the engine bundle — do not edit by hand.
-     Engine bundle c1763182 · extracted 2026-09-27.
+     Engine bundle 1c053c4b · extracted 2026-10-30.
      Regenerate: node skills/sshow-project-builder/scripts/sync-engine.mjs [--bundle <path-or-url>] -->
 
 # Action schema (`apply_actions`)
@@ -8,7 +8,7 @@ The machine contract for the action document: every op and the exact
 parameter shape the engine accepts. Values, units, and recipes live in
 [guide.md](guide.md).
 
-## Ops (19)
+## Ops (25)
 
 - `create_object`
 - `update_object`
@@ -18,6 +18,12 @@ parameter shape the engine accepts. Values, units, and recipes live in
 - `group_objects`
 - `ungroup`
 - `convert_to_path`
+- `insert_table_rows`
+- `insert_table_columns`
+- `delete_table_rows`
+- `delete_table_columns`
+- `merge_table_cells`
+- `unmerge_table_cells`
 - `create_scene`
 - `update_scene`
 - `delete_scene`
@@ -60,6 +66,12 @@ parameter shape the engine accepts. Values, units, and recipes live in
               "group_objects",
               "ungroup",
               "convert_to_path",
+              "insert_table_rows",
+              "insert_table_columns",
+              "delete_table_rows",
+              "delete_table_columns",
+              "merge_table_cells",
+              "unmerge_table_cells",
               "create_scene",
               "update_scene",
               "delete_scene",
@@ -80,7 +92,7 @@ parameter shape the engine accepts. Values, units, and recipes live in
           },
           "id": {
             "type": "string",
-            "description": "Target object id — update_object, delete_object, duplicate_object, move_object, ungroup, convert_to_path."
+            "description": "Target object id — update_object, delete_object, duplicate_object, move_object, ungroup, convert_to_path; the table, for the table ops."
           },
           "ids": {
             "type": "array",
@@ -99,8 +111,10 @@ parameter shape the engine accepts. Values, units, and recipes live in
               "image",
               "video",
               "audio",
+              "stream",
               "group",
-              "frame"
+              "frame",
+              "table"
             ],
             "description": "Primitive type (create_object)."
           },
@@ -184,7 +198,7 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "description": "Solid uses `color`; gradients use `colors` stops (+ geometry); image uses `src`. Geometry coords are 0..1 of the object's bounds.",
+                      "description": "Solid uses `color`; gradients use `colors` stops (+ geometry); image uses `src`; dynamic uses `source` + `name` + `params` (installed only — see dynamics in state). Geometry coords are 0..1 of the object's bounds.",
                       "properties": {
                         "type": {
                           "type": "string",
@@ -194,9 +208,10 @@ parameter shape the engine accepts. Values, units, and recipes live in
                             "radialGradient",
                             "angularGradient",
                             "diamondGradient",
-                            "image"
+                            "image",
+                            "dynamic"
                           ],
-                          "description": "'solid' (default), a gradient, or 'image'"
+                          "description": "'solid' (default), a gradient, 'image', or 'dynamic'"
                         },
                         "color": {
                           "type": "string",
@@ -205,6 +220,18 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         "src": {
                           "type": "string",
                           "description": "image fill: 'asset://id' of an EXISTING project asset (new assets cannot be minted)"
+                        },
+                        "source": {
+                          "type": "string",
+                          "description": "dynamic: id of the pack it comes from"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "dynamic: its name inside the pack"
+                        },
+                        "params": {
+                          "type": "object",
+                          "description": "dynamic: param values by key — defaults fill the rest"
                         },
                         "colors": {
                           "type": "array",
@@ -285,7 +312,7 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "description": "Solid uses `color`; gradients use `colors` stops (+ geometry); image uses `src`. Geometry coords are 0..1 of the object's bounds.",
+                      "description": "Solid uses `color`; gradients use `colors` stops (+ geometry); image uses `src`; dynamic uses `source` + `name` + `params` (installed only — see dynamics in state). Geometry coords are 0..1 of the object's bounds.",
                       "properties": {
                         "type": {
                           "type": "string",
@@ -295,9 +322,10 @@ parameter shape the engine accepts. Values, units, and recipes live in
                             "radialGradient",
                             "angularGradient",
                             "diamondGradient",
-                            "image"
+                            "image",
+                            "dynamic"
                           ],
-                          "description": "'solid' (default), a gradient, or 'image'"
+                          "description": "'solid' (default), a gradient, 'image', or 'dynamic'"
                         },
                         "color": {
                           "type": "string",
@@ -306,6 +334,18 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         "src": {
                           "type": "string",
                           "description": "image fill: 'asset://id' of an EXISTING project asset (new assets cannot be minted)"
+                        },
+                        "source": {
+                          "type": "string",
+                          "description": "dynamic: id of the pack it comes from"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "dynamic: its name inside the pack"
+                        },
+                        "params": {
+                          "type": "object",
+                          "description": "dynamic: param values by key — defaults fill the rest"
                         },
                         "colors": {
                           "type": "array",
@@ -387,7 +427,7 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "items": {
                       "type": "object",
                       "additionalProperties": true,
-                      "description": "shadow/glow use color+alpha (+offset/blur); blur uses strength (+progressive start/end); glass uses refraction/chromaticAberration/tint; adjustment uses -1..1 scalars + hue/exposure (colorBalance/blackAndWhite when asked).",
+                      "description": "shadow/glow use color+alpha (+offset/blur); blur uses strength (+progressive start/end); glass uses refraction/chromaticAberration (the first solid fill tints it); adjustment uses -100..100 scalars (0 = unchanged; sharpen/vignette 0..100; invert 0 or 100 (100 = inverted)) + hue in degrees (colorBalance/blackAndWhite when asked). dynamic uses source/name/params like a dynamic fill, opacity = how much of its result shows over the object (0..1).",
                       "properties": {
                         "type": {
                           "type": "string",
@@ -399,17 +439,14 @@ parameter shape the engine accepts. Values, units, and recipes live in
                             "outerGlow",
                             "glass",
                             "noise",
-                            "adjustment"
+                            "adjustment",
+                            "dynamic"
                           ],
                           "description": "effect kind"
                         },
                         "strength": {
                           "type": "number",
                           "description": "blur/backdropBlur radius (default 8)"
-                        },
-                        "quality": {
-                          "type": "number",
-                          "description": "render quality (blur 4, shadow/glow 8)"
                         },
                         "startX": {
                           "type": "number",
@@ -469,23 +506,75 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         },
                         "brightness": {
                           "type": "number",
-                          "description": "adjustment -1..1"
+                          "description": "adjustment -100..100 (0 = unchanged), moves midtones, black/white stay"
                         },
                         "contrast": {
                           "type": "number",
-                          "description": "adjustment -1..1"
+                          "description": "adjustment -100..100, S curve (no clipping)"
                         },
                         "saturation": {
                           "type": "number",
-                          "description": "adjustment -1..1"
+                          "description": "adjustment -100..100"
                         },
                         "hue": {
                           "type": "number",
-                          "description": "adjustment hue shift"
+                          "description": "adjustment hue shift -180..180 degrees"
                         },
                         "exposure": {
                           "type": "number",
-                          "description": "adjustment exposure"
+                          "description": "adjustment exposure -100..100 (±100 = ±2 EV)"
+                        },
+                        "temperature": {
+                          "type": "number",
+                          "description": "adjustment warm(+)/cool(-) -100..100"
+                        },
+                        "tint": {
+                          "type": "number",
+                          "description": "adjustment magenta(+)/green(-) -100..100 (blackAndWhite.tint is a hex; glass ignores tint)"
+                        },
+                        "vibrance": {
+                          "type": "number",
+                          "description": "adjustment -100..100, protects skin tones"
+                        },
+                        "highlights": {
+                          "type": "number",
+                          "description": "adjustment bright-area tone -100..100 (not colorBalance.highlights)"
+                        },
+                        "shadows": {
+                          "type": "number",
+                          "description": "adjustment dark-area tone -100..100 (not colorBalance.shadows)"
+                        },
+                        "whites": {
+                          "type": "number",
+                          "description": "adjustment brighter(+)/dimmer(-) whites -100..100"
+                        },
+                        "blacks": {
+                          "type": "number",
+                          "description": "adjustment lifted(+)/deeper(-) blacks -100..100"
+                        },
+                        "clarity": {
+                          "type": "number",
+                          "description": "adjustment local contrast -100..100"
+                        },
+                        "sharpen": {
+                          "type": "number",
+                          "description": "adjustment 0..100"
+                        },
+                        "vignette": {
+                          "type": "number",
+                          "description": "adjustment edge darkening 0..100"
+                        },
+                        "invert": {
+                          "type": "number",
+                          "description": "adjustment 0 or 100 (100 = inverted)"
+                        },
+                        "levels": {
+                          "type": "object",
+                          "description": "adjustment {rgb|r|g|b:{input:{black 0..254,gamma 0.1..9.99,white 1..255},output:{black,white 0..255}}}; send every channel you keep (a missing one is identity)"
+                        },
+                        "curves": {
+                          "type": "object",
+                          "description": "adjustment {rgb|r|g|b:[[x,y]…]} 0..255, x ascending, ends included; send every channel you keep"
                         },
                         "refraction": {
                           "type": "number",
@@ -494,10 +583,6 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         "chromaticAberration": {
                           "type": "number",
                           "description": "glass 0..2"
-                        },
-                        "tint": {
-                          "type": "number",
-                          "description": "glass tint amount 0..1 (tintColor auto-derived)"
                         },
                         "scale": {
                           "type": "number",
@@ -510,6 +595,10 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         "seed": {
                           "type": "number",
                           "description": "noise"
+                        },
+                        "opacity": {
+                          "type": "number",
+                          "description": "dynamic: 0..1"
                         },
                         "visible": {
                           "type": "boolean"
@@ -766,7 +855,7 @@ parameter shape the engine accepts. Values, units, and recipes live in
               },
               "data": {
                 "type": "object",
-                "description": "text→text/fontFamily/fontSize/fontWeight/textAlign/verticalAlign/autoSize; rect→radius; circle→innerRadius; image/video/audio→src; path→points/closed.",
+                "description": "text→text/fontFamily/fontSize/fontWeight/textAlign/verticalAlign/autoSize; rect→radius; circle→innerRadius; image/video/audio→src; stream→source/poster (guide §4.8); path→points/closed and a connector's ends and route (guide §4.3); table→its texts, tracks and looks (guide §14).",
                 "properties": {
                   "text": {
                     "type": "string"
@@ -813,11 +902,58 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "items": {
                       "type": "number"
                     },
-                    "description": "rect/frame [tl,tr,br,bl]"
+                    "description": "rect/frame/table/stream [tl,tr,br,bl]"
                   },
                   "clip": {
                     "type": "boolean",
-                    "description": "frame: clip children to the frame bounds (default true)"
+                    "description": "frame/table: clip children to the bounds (default true)"
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "description": "table: cell texts by row; null keeps a cell"
+                  },
+                  "columns": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    },
+                    "description": "table: [{id, width}] — by id (a create: in order, no id)"
+                  },
+                  "rows": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    },
+                    "description": "table: [{id, height}] least heights — by id (a create: in order, no id)"
+                  },
+                  "cells": {
+                    "type": "object",
+                    "description": "table: 'rowId:colId' → {fill, borders:{top,right,bottom,left}, padding}; null = the table's look"
+                  },
+                  "lines": {
+                    "type": "object",
+                    "description": "table: inner lines {horizontal, vertical}"
+                  },
+                  "headerRows": {
+                    "type": "object",
+                    "description": "table: {count, fill} the top rows"
+                  },
+                  "bandRows": {
+                    "type": "object",
+                    "description": "table: {fill} every other body row"
+                  },
+                  "padding": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "description": "table: cell padding [t,r,b,l]"
                   },
                   "innerRadius": {
                     "type": "number",
@@ -827,9 +963,103 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "type": "string",
                     "description": "image/video/audio asset uri"
                   },
+                  "source": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "camera",
+                          "screen"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "an existing source's id to show the same camera again; omit for a new one"
+                      }
+                    },
+                    "description": "stream: its live source"
+                  },
+                  "fit": {
+                    "type": "string",
+                    "enum": [
+                      "cover",
+                      "contain"
+                    ],
+                    "description": "stream"
+                  },
+                  "mirror": {
+                    "type": "boolean",
+                    "description": "stream: flip (front camera)"
+                  },
+                  "muted": {
+                    "type": "boolean",
+                    "description": "video/stream"
+                  },
+                  "volume": {
+                    "type": "number",
+                    "description": "video/stream 0..1"
+                  },
+                  "poster": {
+                    "type": "string",
+                    "description": "stream: image asset uri"
+                  },
                   "closed": {
                     "type": "boolean",
                     "description": "path"
+                  },
+                  "connectionStart": {
+                    "type": "object",
+                    "description": "connector end, whole; null detaches",
+                    "properties": {
+                      "objectId": {
+                        "type": "string"
+                      },
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "connectionEnd": {
+                    "type": "object",
+                    "description": "connector end, whole; null detaches",
+                    "properties": {
+                      "objectId": {
+                        "type": "string"
+                      },
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "connectionRoute": {
+                    "type": "string",
+                    "enum": [
+                      "free",
+                      "straight",
+                      "curve",
+                      "elbow"
+                    ]
+                  },
+                  "connectionAvoid": {
+                    "type": "boolean",
+                    "description": "curve/elbow only"
                   },
                   "points": {
                     "type": "array",
@@ -906,7 +1136,7 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "description": "Solid uses `color`; gradients use `colors` stops (+ geometry); image uses `src`. Geometry coords are 0..1 of the object's bounds.",
+                      "description": "Solid uses `color`; gradients use `colors` stops (+ geometry); image uses `src`; dynamic uses `source` + `name` + `params` (installed only — see dynamics in state). Geometry coords are 0..1 of the object's bounds.",
                       "properties": {
                         "type": {
                           "type": "string",
@@ -916,9 +1146,10 @@ parameter shape the engine accepts. Values, units, and recipes live in
                             "radialGradient",
                             "angularGradient",
                             "diamondGradient",
-                            "image"
+                            "image",
+                            "dynamic"
                           ],
-                          "description": "'solid' (default), a gradient, or 'image'"
+                          "description": "'solid' (default), a gradient, 'image', or 'dynamic'"
                         },
                         "color": {
                           "type": "string",
@@ -927,6 +1158,18 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         "src": {
                           "type": "string",
                           "description": "image fill: 'asset://id' of an EXISTING project asset (new assets cannot be minted)"
+                        },
+                        "source": {
+                          "type": "string",
+                          "description": "dynamic: id of the pack it comes from"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "dynamic: its name inside the pack"
+                        },
+                        "params": {
+                          "type": "object",
+                          "description": "dynamic: param values by key — defaults fill the rest"
                         },
                         "colors": {
                           "type": "array",
@@ -1007,7 +1250,7 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "description": "Solid uses `color`; gradients use `colors` stops (+ geometry); image uses `src`. Geometry coords are 0..1 of the object's bounds.",
+                      "description": "Solid uses `color`; gradients use `colors` stops (+ geometry); image uses `src`; dynamic uses `source` + `name` + `params` (installed only — see dynamics in state). Geometry coords are 0..1 of the object's bounds.",
                       "properties": {
                         "type": {
                           "type": "string",
@@ -1017,9 +1260,10 @@ parameter shape the engine accepts. Values, units, and recipes live in
                             "radialGradient",
                             "angularGradient",
                             "diamondGradient",
-                            "image"
+                            "image",
+                            "dynamic"
                           ],
-                          "description": "'solid' (default), a gradient, or 'image'"
+                          "description": "'solid' (default), a gradient, 'image', or 'dynamic'"
                         },
                         "color": {
                           "type": "string",
@@ -1028,6 +1272,18 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         "src": {
                           "type": "string",
                           "description": "image fill: 'asset://id' of an EXISTING project asset (new assets cannot be minted)"
+                        },
+                        "source": {
+                          "type": "string",
+                          "description": "dynamic: id of the pack it comes from"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "dynamic: its name inside the pack"
+                        },
+                        "params": {
+                          "type": "object",
+                          "description": "dynamic: param values by key — defaults fill the rest"
                         },
                         "colors": {
                           "type": "array",
@@ -1109,7 +1365,7 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "items": {
                       "type": "object",
                       "additionalProperties": true,
-                      "description": "shadow/glow use color+alpha (+offset/blur); blur uses strength (+progressive start/end); glass uses refraction/chromaticAberration/tint; adjustment uses -1..1 scalars + hue/exposure (colorBalance/blackAndWhite when asked).",
+                      "description": "shadow/glow use color+alpha (+offset/blur); blur uses strength (+progressive start/end); glass uses refraction/chromaticAberration (the first solid fill tints it); adjustment uses -100..100 scalars (0 = unchanged; sharpen/vignette 0..100; invert 0 or 100 (100 = inverted)) + hue in degrees (colorBalance/blackAndWhite when asked). dynamic uses source/name/params like a dynamic fill, opacity = how much of its result shows over the object (0..1).",
                       "properties": {
                         "type": {
                           "type": "string",
@@ -1121,17 +1377,14 @@ parameter shape the engine accepts. Values, units, and recipes live in
                             "outerGlow",
                             "glass",
                             "noise",
-                            "adjustment"
+                            "adjustment",
+                            "dynamic"
                           ],
                           "description": "effect kind"
                         },
                         "strength": {
                           "type": "number",
                           "description": "blur/backdropBlur radius (default 8)"
-                        },
-                        "quality": {
-                          "type": "number",
-                          "description": "render quality (blur 4, shadow/glow 8)"
                         },
                         "startX": {
                           "type": "number",
@@ -1191,23 +1444,75 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         },
                         "brightness": {
                           "type": "number",
-                          "description": "adjustment -1..1"
+                          "description": "adjustment -100..100 (0 = unchanged), moves midtones, black/white stay"
                         },
                         "contrast": {
                           "type": "number",
-                          "description": "adjustment -1..1"
+                          "description": "adjustment -100..100, S curve (no clipping)"
                         },
                         "saturation": {
                           "type": "number",
-                          "description": "adjustment -1..1"
+                          "description": "adjustment -100..100"
                         },
                         "hue": {
                           "type": "number",
-                          "description": "adjustment hue shift"
+                          "description": "adjustment hue shift -180..180 degrees"
                         },
                         "exposure": {
                           "type": "number",
-                          "description": "adjustment exposure"
+                          "description": "adjustment exposure -100..100 (±100 = ±2 EV)"
+                        },
+                        "temperature": {
+                          "type": "number",
+                          "description": "adjustment warm(+)/cool(-) -100..100"
+                        },
+                        "tint": {
+                          "type": "number",
+                          "description": "adjustment magenta(+)/green(-) -100..100 (blackAndWhite.tint is a hex; glass ignores tint)"
+                        },
+                        "vibrance": {
+                          "type": "number",
+                          "description": "adjustment -100..100, protects skin tones"
+                        },
+                        "highlights": {
+                          "type": "number",
+                          "description": "adjustment bright-area tone -100..100 (not colorBalance.highlights)"
+                        },
+                        "shadows": {
+                          "type": "number",
+                          "description": "adjustment dark-area tone -100..100 (not colorBalance.shadows)"
+                        },
+                        "whites": {
+                          "type": "number",
+                          "description": "adjustment brighter(+)/dimmer(-) whites -100..100"
+                        },
+                        "blacks": {
+                          "type": "number",
+                          "description": "adjustment lifted(+)/deeper(-) blacks -100..100"
+                        },
+                        "clarity": {
+                          "type": "number",
+                          "description": "adjustment local contrast -100..100"
+                        },
+                        "sharpen": {
+                          "type": "number",
+                          "description": "adjustment 0..100"
+                        },
+                        "vignette": {
+                          "type": "number",
+                          "description": "adjustment edge darkening 0..100"
+                        },
+                        "invert": {
+                          "type": "number",
+                          "description": "adjustment 0 or 100 (100 = inverted)"
+                        },
+                        "levels": {
+                          "type": "object",
+                          "description": "adjustment {rgb|r|g|b:{input:{black 0..254,gamma 0.1..9.99,white 1..255},output:{black,white 0..255}}}; send every channel you keep (a missing one is identity)"
+                        },
+                        "curves": {
+                          "type": "object",
+                          "description": "adjustment {rgb|r|g|b:[[x,y]…]} 0..255, x ascending, ends included; send every channel you keep"
                         },
                         "refraction": {
                           "type": "number",
@@ -1216,10 +1521,6 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         "chromaticAberration": {
                           "type": "number",
                           "description": "glass 0..2"
-                        },
-                        "tint": {
-                          "type": "number",
-                          "description": "glass tint amount 0..1 (tintColor auto-derived)"
                         },
                         "scale": {
                           "type": "number",
@@ -1232,6 +1533,10 @@ parameter shape the engine accepts. Values, units, and recipes live in
                         "seed": {
                           "type": "number",
                           "description": "noise"
+                        },
+                        "opacity": {
+                          "type": "number",
+                          "description": "dynamic: 0..1"
                         },
                         "visible": {
                           "type": "boolean"
@@ -1660,7 +1965,7 @@ parameter shape the engine accepts. Values, units, and recipes live in
               },
               "data": {
                 "type": "object",
-                "description": "text→text/fontFamily/fontSize/fontWeight/textAlign/verticalAlign/autoSize; rect→radius; circle→innerRadius; image/video/audio→src; path→points/closed.",
+                "description": "text→text/fontFamily/fontSize/fontWeight/textAlign/verticalAlign/autoSize; rect→radius; circle→innerRadius; image/video/audio→src; stream→source/poster (guide §4.8); path→points/closed and a connector's ends and route (guide §4.3); table→its texts, tracks and looks (guide §14).",
                 "properties": {
                   "text": {
                     "type": "string"
@@ -1707,11 +2012,58 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "items": {
                       "type": "number"
                     },
-                    "description": "rect/frame [tl,tr,br,bl]"
+                    "description": "rect/frame/table/stream [tl,tr,br,bl]"
                   },
                   "clip": {
                     "type": "boolean",
-                    "description": "frame: clip children to the frame bounds (default true)"
+                    "description": "frame/table: clip children to the bounds (default true)"
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "description": "table: cell texts by row; null keeps a cell"
+                  },
+                  "columns": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    },
+                    "description": "table: [{id, width}] — by id (a create: in order, no id)"
+                  },
+                  "rows": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    },
+                    "description": "table: [{id, height}] least heights — by id (a create: in order, no id)"
+                  },
+                  "cells": {
+                    "type": "object",
+                    "description": "table: 'rowId:colId' → {fill, borders:{top,right,bottom,left}, padding}; null = the table's look"
+                  },
+                  "lines": {
+                    "type": "object",
+                    "description": "table: inner lines {horizontal, vertical}"
+                  },
+                  "headerRows": {
+                    "type": "object",
+                    "description": "table: {count, fill} the top rows"
+                  },
+                  "bandRows": {
+                    "type": "object",
+                    "description": "table: {fill} every other body row"
+                  },
+                  "padding": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "description": "table: cell padding [t,r,b,l]"
                   },
                   "innerRadius": {
                     "type": "number",
@@ -1721,9 +2073,103 @@ parameter shape the engine accepts. Values, units, and recipes live in
                     "type": "string",
                     "description": "image/video/audio asset uri"
                   },
+                  "source": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "camera",
+                          "screen"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "an existing source's id to show the same camera again; omit for a new one"
+                      }
+                    },
+                    "description": "stream: its live source"
+                  },
+                  "fit": {
+                    "type": "string",
+                    "enum": [
+                      "cover",
+                      "contain"
+                    ],
+                    "description": "stream"
+                  },
+                  "mirror": {
+                    "type": "boolean",
+                    "description": "stream: flip (front camera)"
+                  },
+                  "muted": {
+                    "type": "boolean",
+                    "description": "video/stream"
+                  },
+                  "volume": {
+                    "type": "number",
+                    "description": "video/stream 0..1"
+                  },
+                  "poster": {
+                    "type": "string",
+                    "description": "stream: image asset uri"
+                  },
                   "closed": {
                     "type": "boolean",
                     "description": "path"
+                  },
+                  "connectionStart": {
+                    "type": "object",
+                    "description": "connector end, whole; null detaches",
+                    "properties": {
+                      "objectId": {
+                        "type": "string"
+                      },
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "connectionEnd": {
+                    "type": "object",
+                    "description": "connector end, whole; null detaches",
+                    "properties": {
+                      "objectId": {
+                        "type": "string"
+                      },
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "connectionRoute": {
+                    "type": "string",
+                    "enum": [
+                      "free",
+                      "straight",
+                      "curve",
+                      "elbow"
+                    ]
+                  },
+                  "connectionAvoid": {
+                    "type": "boolean",
+                    "description": "curve/elbow only"
                   },
                   "points": {
                     "type": "array",
@@ -1791,6 +2237,42 @@ parameter shape the engine accepts. Values, units, and recipes live in
               }
             }
           },
+          "index": {
+            "type": "number",
+            "description": "Table row/column ops: the first row/column, from 0 (an insert: omit = after the last)."
+          },
+          "count": {
+            "type": "number",
+            "description": "Table row/column ops: how many (default 1, or as many as values holds)."
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "insert_table_rows/columns: the new cells' texts by row."
+          },
+          "range": {
+            "type": "object",
+            "properties": {
+              "rowIndex": {
+                "type": "number"
+              },
+              "colIndex": {
+                "type": "number"
+              },
+              "rowSpan": {
+                "type": "number"
+              },
+              "colSpan": {
+                "type": "number"
+              }
+            },
+            "description": "merge/unmerge_table_cells: the cells, from 0 (spans default 1)."
+          },
           "size": {
             "type": "object",
             "properties": {
@@ -1818,11 +2300,11 @@ parameter shape the engine accepts. Values, units, and recipes live in
           }
         }
       },
-      "description": "Ordered mutations. They commit atomically as a single undo step, so emit the whole change set in one call."
+      "description": "Ordered mutations. They commit as a single undo step, so emit the whole change set in one call."
     },
     "reply": {
       "type": "string",
-      "description": "Plain text in the language of the request, no markdown, at most 600 characters: one sentence on what you changed or why nothing changed — or, when the message was not an edit request, the answer itself."
+      "description": "Plain text in the language of the user's latest message, no markdown, at most 600 characters: one sentence on what you changed or why nothing changed — or, when the message was not an edit request, the answer itself."
     }
   }
 }

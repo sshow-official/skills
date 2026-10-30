@@ -25,8 +25,9 @@
 
 import { createServer } from 'node:http';
 import { readFile, readdir, mkdir, writeFile, stat } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { basename, dirname, extname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { gunzipSync } from 'node:zlib';
 
@@ -176,12 +177,16 @@ const loadAssetSources = async (files, baseDir) => {
 
 //#region ---------- Engine harness ----------
 
+/** Playwright from beside the skill, else from the folder the build runs in. */
 const importChromium = async () => {
+    const local = createRequire(resolve('package.json'));
     for (const pkg of ['playwright', '@playwright/test']) {
-        const mod = await import(pkg).catch(() => null);
-        if (mod?.chromium) return mod.chromium;
+        const mod = await import(pkg).catch(() => null)
+            ?? await Promise.resolve().then(() => import(pathToFileURL(local.resolve(pkg)).href)).catch(() => null);
+        const chromium = mod?.chromium ?? mod?.default?.chromium;
+        if (chromium) return chromium;
     }
-    fail('playwright is required — npm i playwright && npx playwright install chromium');
+    fail('playwright is required — npm i playwright (here, or in a folder above the skill) && npx playwright install chromium');
 };
 
 /**
@@ -379,7 +384,7 @@ const main = async () => {
         const unresolvedFonts = await page.evaluate(async () => {
             const fonts = window.sshow.getFonts();
             const missing = [];
-            for (const family of fonts.collectUsedFonts()) {
+            for (const family of fonts.collectUsedFonts().keys()) {
                 await fonts.waitForReady(family);
                 if (!fonts.isLoaded(family)) missing.push(family);
             }

@@ -9,8 +9,12 @@ Usage:
     python3 pack.py <dir> --out <file>    # custom output path
 
 Mirrors the contract the SSHOW editor and server enforce, so a package
-that passes here imports and submits cleanly. Standard library only — a
-dynamic pack's shaders compile only in the editor: drop the package on it.
+that passes here imports and submits cleanly. Standard library only, so it
+cannot compile a dynamic pack's shaders — sshow-dynamic-builder's build.mjs
+runs this check, then compiles them in the real engine.
+
+The same file ships in sshow-plugin-builder and sshow-dynamic-builder (a
+skill installed alone must still carry its packer): change both together.
 """
 
 import argparse
@@ -27,7 +31,7 @@ VERSION_PATTERN = re.compile(r"\d+\.\d+\.\d+", re.ASCII)
 # The manifest a folder holds (exactly one) names its kind and package extension.
 KINDS = {"plugin.json": ".sshowplugin", "dynamic.json": ".sshowdynamic"}
 ICON_EXTS = {"png", "svg", "jpg", "jpeg", "webp"}
-RESERVED_IDS = {"installed", "mine", "submit", "builtin"}
+RESERVED_IDS = {"installed", "mine", "submit", "check", "builtin"}
 API_VERSION = 1
 # Tags a <field>_localized copy map may use: the languages the editor shows (BCP 47).
 LANGUAGE_TAGS = {"en", "ko"}
@@ -167,8 +171,10 @@ def check_dynamics(dynamics, errors):
                 numbers[key] = reach
 
         glsl = declaration.get("glsl")
-        if not isinstance(glsl, str) or not glsl.strip() or DIRECTIVE_PATTERN.search(glsl):
-            errors.append(f"{field}.glsl — one function, no #version / #extension / #include")
+        if not isinstance(glsl, str) or not glsl.strip():
+            errors.append(f"{field}.glsl — missing: the shader, as a string (sshow-dynamic-builder's build writes shaders/<name>.glsl here)")
+        elif DIRECTIVE_PATTERN.search(glsl):
+            errors.append(f"{field}.glsl — no #version / #extension / #include, not even in a comment")
         wgsl = declaration.get("wgsl")
         if wgsl is not None and not isinstance(wgsl, str):
             errors.append(f"{field}.wgsl — string or null")
@@ -212,7 +218,7 @@ def validate(folder: Path):
 
     plugin_id = manifest.get("id")
     if not isinstance(plugin_id, str) or not ID_PATTERN.fullmatch(plugin_id) or ".." in plugin_id:
-        errors.append('id — lowercase reverse-domain, [a-z0-9.-] only, no ".."')
+        errors.append('id — lowercase reverse-domain, [a-z0-9.-] only, starting with a letter or digit, no ".."')
     elif len(plugin_id) > MAX_ID:
         errors.append(f"id — over {MAX_ID} chars")
     elif plugin_id in RESERVED_IDS:

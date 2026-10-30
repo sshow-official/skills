@@ -43,7 +43,10 @@ exactly `1`, the plugin is refused before your code ever runs.
 
 All reads return **snapshots (copies)**. Mutating a returned object changes
 nothing in the document. Object reads see the **active scene only** —
-switch with `setActiveScene` to read another.
+switch with `setActiveScene` to read another. Reads are the document: in
+Animation mode at a time above `0` they return the frame-0 pose, not what
+the canvas draws at the playhead — sample the object's `motion` at
+`getTimelineTime()` when you need the drawn value.
 
 ### `document.getState() → Promise<state>`
 
@@ -55,13 +58,19 @@ The whole document, id-complete:
     activeSceneId,
     scenes: [{
         id, name, active,
-        objects: [/* ACTIVE scene: full objects, children nested; other scenes: {id, type, name} */],
+        objects: [/* ACTIVE scene: full objects, children nested; other scenes: {id, type, name} (a stream also its source and state) */],
         motion,       // active scene only, when it has transitions or a clock
         interaction   // active scene only, when it has rules — its own rules, not its objects'
     }],
-    fonts: [/* family names registered in the document */]
+    fonts: [/* family names registered in the document */],
+    dynamics: [/* installed shader paints and effects: { source, name, slot, params } */]
 }
 ```
+
+`dynamics` lists the dynamics this editor has installed: `slot` is
+`'paint'` (a fill or stroke) or `'effect'`, and `params` holds each param's
+default. Place one as `{ type: 'dynamic', source, name, params }`; one that
+is not installed, or sits in the wrong slot, is skipped.
 
 There is no read for variables, the scene background, or the editor's mode
 — a plugin can address only the variables it created itself (from `ids`).
@@ -87,10 +96,12 @@ Top-level fields are always there, and `transform` carries all 13 keys
   `'solid'`; paints drop `opacity: 1`, `visible: true`, and a stroke's
   `align: 0.5`; empty `fills`/`strokes`/`effects` arrays drop; text data
   drops its defaults (`textAlign: 'left'`, `verticalAlign: 'top'`,
-  `autoSize: true`, `letterSpacing: 0`, …); a zero `radius` or
-  `innerRadius` and `closed: false` drop, and a `data` or `motion` left
-  empty disappears. A keyframe with no `tween` carries the engine's
-  ease-out `[0.25, 0, 0.05, 1]` — reading absence as linear misplays motion.
+  `autoSize: true`, `letterSpacing: 0`, …), and its `lineHeight` drops
+  when it equals `round(fontSize × 1.5)` — read its absence as that value;
+  a zero `radius` or `innerRadius` drops (a path always carries `closed`),
+  and a `data` or `motion` left empty disappears. A keyframe with no
+  `tween` carries the engine's ease-out `[0.25, 0, 0.05, 1]` — reading
+  absence as linear misplays motion.
 - **Asset bytes are elided.** A `data.src` longer than 120 characters
   becomes a `<src len=… kind=…>` marker (an `asset://` uri is short and
   stays). Never copy a marker back into a `set` — read the real bytes with
@@ -98,6 +109,12 @@ Top-level fields are always there, and `transform` carries all 13 keys
 - **Web requests are masked.** A rule's `fetch` action reads back with
   every header value and URL query value as `***`. Sending it back
   unchanged is safe — the stored one is kept.
+- **A table reads by its cells.** Beside its `children`, a `table` carries
+  `data.values` (each cell's text, row by row: `''` for an empty cell,
+  `null` under a merge or on a cell holding something other than text),
+  `contents` (each cell's content id on the same grid), and `merges`
+  (`{ rowIndex, colIndex, rowSpan, colSpan }`, when there are any). Change
+  it with the table ops, not by moving its children.
 
 Geometry is never summarised: `data.points` and `data.text` reach a plugin
 complete, however long, so trace a real path instead of falling back to its
@@ -164,7 +181,7 @@ const { applied, skipped, ids } = await api.document.applyActions(actions, label
 ```
 
 - `actions` — an array of action objects; see
-  [actions.md](actions.md) for the 19 ops and their fields.
+  [actions.md](actions.md) for the 25 ops and their fields.
 - `label` — the undo-history label users see. Defaults to the plugin name.
   Never serialized into the document.
 - `applied` — how many actions committed. The batch commits atomically:
@@ -175,16 +192,16 @@ const { applied, skipped, ids } = await api.document.applyActions(actions, label
   message. The rest of the batch still applies. Always check this and
   surface failures.
 - `ids` — `{ objects, scenes, variables }`, each a `{ alias: id }` map of
-  the aliases this call declared. A create that was skipped can still be
-  listed, so use `ids` only for creates that are not in `skipped`. See
-  below.
+  the aliases this call declared. A skipped create is not listed, and
+  neither is anything it declared. See below.
 
-A failure that only shows while the batch runs — an
-`options.parentObjectId` that names nothing or a non-container, an inline
-child's paint without `type`, a later action on a create that was skipped
-— rolls the whole call back and **rejects** instead of listing a skip, so
-wrap the call in `try`/`catch`. The `history:update` your own call causes
-reaches your callback before the promise resolves.
+A failure that only shows while the batch runs, such as an inline child's
+paint without `type`, rolls the whole call back and **rejects** instead of
+listing a skip, so wrap the call in `try`/`catch`. An
+`options.parentObjectId` that is not a frame or group in that scene, and a
+later action on a create that was skipped, are skipped like any other
+malformed action. The `history:update` your own call causes reaches your
+callback before the promise resolves.
 
 ### Ids are the engine's — yours are aliases
 
@@ -222,7 +239,8 @@ await api.document.setSelection([cardId]);  // 'card' would select nothing
 
 A pose write — `transform`, `size`, `opacity`, `distort`, `style`, and the
 animatable `data` keys (`points`, `radius`, `innerRadius`, `volume`,
-`text`) — can become a keyframe:
+`text`, and a text's `fontSize`, whose `lineHeight` and `letterSpacing`
+sent with it scale along) — can become a keyframe:
 
 - In **Design mode** it goes to the document, and on a track that is
   already animated it also sets the track's key at time `0` (Design mode
@@ -271,6 +289,12 @@ await api.document.applyActions([
 ], 'Edit image');
 ```
 
+A new `src` is a new photo: the image drops its crop and the photo it kept
+from before editing, and `assets.get` returns the whole photo with no crop
+applied. To keep the user's crop on an edit that keeps the photo's size,
+send it back with the src — `set: { data: { src: uri, originWidth,
+originHeight, crop } }`, copied from the read.
+
 ## storage
 
 ```js
@@ -288,9 +312,10 @@ sandbox has no origin of its own.)
 
 - **Values are JSON.** Objects, arrays, numbers, strings, booleans, null.
   No ArrayBuffer, no Map/Set, no functions. Storing `undefined` clears the
-  entry.
+  entry. Keys are non-empty strings.
 - **64KB per plugin**, for the whole record. An over-cap `set` throws and
-  leaves what was already stored intact.
+  leaves what was already stored intact; a full browser storage budget
+  makes `set` throw the same way.
 - **Scope is the app, not the document.** The same record shows up in every
   project the user opens here, and it does not travel inside a `.sshow`
   file. Web, Studio and tablet each keep their own. Put user preferences
@@ -361,9 +386,11 @@ api.ui.resize({ width: 480, height: 520 }); // both axes
 
 The host panel resizes so your screen gets the requested dimensions,
 clamped to the panel's own bounds (about 280×240 up to 90% of the editor
-window). Without a call the screen fills the default panel. Call it once
-after connect (and again if your content grows). The user can still drag
-the panel to any size afterwards — keep your layout fluid.
+window). Without a call your screen gets whatever size the panel was left
+at — the last plugin's request or the user's drag — so call it once after
+connect, and again if your content grows. A call while the panel is
+minimized is dropped. The user can still drag the panel to any size
+afterwards — keep your layout fluid.
 
 ### Theme — CSS variables (preferred)
 
@@ -415,7 +442,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => rend
 Keys your screen does not claim go on to the editor, so every canvas
 shortcut fires while your panel has focus: Ctrl/Cmd+Z, Delete/Backspace
 (deletes the user's selection), arrow keys (nudge it), tool letters, Enter
-(edits the selected text, path, or image), Esc, Tab (cycles Design →
+(edits the selected text, path, image, or table), Esc, Tab (cycles Design →
 Animation → Interaction mode), and Space (hold to pan; in Animation mode a
 tap plays or pauses). Outside a text field, Tab and Space never reach your
 controls: Tab does not move focus between them, and Space does not press a

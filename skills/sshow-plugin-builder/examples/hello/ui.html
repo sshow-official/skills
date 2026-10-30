@@ -22,20 +22,24 @@
 
         const hint = document.querySelector('#hint');
         document.querySelector('#insert').addEventListener('click', async () => {
-            const { applied, skipped, ids } = await api.document.applyActions([{
-                op: 'create_object', type: 'text', config: {
-                    id: 'greeting',
-                    name: 'greeting',
-                    data: { text: 'Hello, SSHOW!', fontSize: 48, lineHeight: 60, autoSize: true },
-                    transform: { x: 200, y: 200, anchorX: 0, anchorY: 0 }
+            try {
+                const { applied, skipped, ids } = await api.document.applyActions([{
+                    op: 'create_object', type: 'text', config: {
+                        id: 'greeting',
+                        name: 'greeting',
+                        data: { text: 'Hello, SSHOW!', fontSize: 48, lineHeight: 60, autoSize: true },
+                        transform: { x: 200, y: 200, anchorX: 0, anchorY: 0 }
+                    }
+                }], 'Hello plugin');
+                if (skipped.length) {
+                    hint.textContent = `Skipped: ${skipped[0].reason}`;
+                    return;
                 }
-            }], 'Hello plugin');
-            if (skipped.length) {
-                hint.textContent = `Skipped: ${skipped[0].reason}`;
-                return;
+                await api.document.setSelection([ids.objects.greeting]);
+                hint.textContent = `Inserted (${applied} action, one undo step).`;
+            } catch (error) {
+                hint.textContent = `Failed: ${error.message}`;
             }
-            await api.document.setSelection([ids.objects.greeting]);
-            hint.textContent = `Inserted (${applied} action, one undo step).`;
         });
     })();
 </script>

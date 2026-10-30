@@ -56,12 +56,16 @@ that one global. There is no build step and no dependency install.
 }
 ```
 
-- `id` — lowercase reverse-domain, `[a-z0-9.-]` only, no `..`, ≤ 100 chars.
-  Pick a domain you control: the first person to publish an id owns it
-  forever. Never reuse `installed`, `mine`, `submit` or `builtin`, and leave
-  ids under `app.sshow.` to SSHOW — only SSHOW publishes those.
+- `id` — lowercase reverse-domain, `[a-z0-9.-]` only, starting with a
+  letter or digit, no `..`, ≤ 100 chars. One id names one extension,
+  plugins and dynamic packs alike. Pick a domain you control: the first
+  account to send an id for review owns it from then on, approved or not
+  (cancelling the review of its first version frees it). Never reuse
+  `installed`, `mine`, `submit`, `check` or `builtin`, and leave ids under
+  `app.sshow.` to SSHOW — only SSHOW publishes those.
 - `version` — exact `x.y.z`. Every submission must be strictly higher than
-  every earlier one, so bump before repackaging for publish.
+  every earlier one (a version taken back from review doesn't count), so
+  bump before repackaging for publish.
 - `api` — must be the integer `1`. Anything else is refused at load.
 - `main` — the entry document filename inside the zip.
 - `description` / `author` / `icon` — optional but all three drive the
@@ -75,7 +79,8 @@ that one global. There is no build step and no dependency install.
   English. Use `ko`, not `kr` or `ko-KR` —
   the editor ignores any other key, and the packer refuses it. The same
   goes for a dynamic's `label_localized` and a param's `label_localized`
-  in a dynamic pack (`dynamic.json`).
+  in a dynamic pack (`dynamic.json`) — build those with the
+  sshow-dynamic-builder skill.
 
 Unknown manifest fields are silently dropped — do not invent fields.
 
@@ -90,15 +95,20 @@ Unknown manifest fields are silently dropped — do not invent fields.
         api.ui.resize(160);
 
         document.querySelector('#insert').addEventListener('click', async () => {
-            const { skipped, ids } = await api.document.applyActions([{
-                op: 'create_object', type: 'text', config: {
-                    id: 'greeting',
-                    name: 'greeting',
-                    data: { text: 'Hello, SSHOW!', fontSize: 48, lineHeight: 60, autoSize: true },
-                    transform: { x: 200, y: 200, anchorX: 0, anchorY: 0 }
-                }
-            }], 'Hello plugin');
-            if (!skipped.length) await api.document.setSelection([ids.objects.greeting]);
+            try {
+                const { skipped, ids } = await api.document.applyActions([{
+                    op: 'create_object', type: 'text', config: {
+                        id: 'greeting',
+                        name: 'greeting',
+                        data: { text: 'Hello, SSHOW!', fontSize: 48, lineHeight: 60, autoSize: true },
+                        transform: { x: 200, y: 200, anchorX: 0, anchorY: 0 }
+                    }
+                }], 'Hello plugin');
+                if (skipped.length) return console.warn(skipped[0].reason);
+                await api.document.setSelection([ids.objects.greeting]);
+            } catch (error) {
+                console.warn(error.message);
+            }
         });
     })();
 </script>
@@ -138,10 +148,14 @@ Style the panel with the injected theme variables
    rotateZ` take degrees (auto-converted — `rotate` is the pre-3D spelling
    of `rotateZ`). Reads return radians, and motion-track
    `transform.rotate*` values are raw radians — convert a read value
-   before sending it back.
+   before sending it back. A child written inline in a group or frame
+   create is not converted (its `rotate*` are radians); create it with
+   `options.parentObjectId` instead.
 6. **Text sizing.** Default `autoSize: true` grows the box and only wraps
    on real newlines. Body copy that should wrap needs `autoSize: false`
-   plus an explicit `size: { width, height }`. Give every text a
+   plus an explicit `size: { width, height }`. (A text the user set to
+   grow in height reads `autoSize: false, autoHeight: true`: its width is
+   fixed and its height follows the wrapped lines.) Give every text a
    `lineHeight` with its `fontSize` and an anchor that matches its
    alignment (guide F1, F14), or it drifts from where you placed it.
 7. **Media goes through `assets.register`.** `data.src` and image fills
@@ -208,17 +222,21 @@ count and the files it reads.
 - **Editor (web + desktop):** Plugins panel → `+` button → pick the
   `.sshowplugin`. Importing an id that is already there replaces it in
   place — upgrade, rollback, or reinstall — and reopens it if it was
-  running. A plugin imported this way lasts until the editor reloads.
-- **Studio desktop hot reload:** set `"plugins.devPath"` in Studio's
-  `settings.json` to the plugin *folder* and relaunch Studio. Every file
-  save re-registers the plugin in open editors and reopens it if it was
-  running — no zipping during iteration.
+  running. A plugin imported this way lasts until the editor reloads. A
+  refused file only says it could not be read (or was built for another
+  plugin API version) — run `pack.py --check` on the folder for the reason.
+- **Studio hot reload (Windows app):** set `"plugins.devPath"` in Studio's
+  `settings.json` (File › Settings › Edit settings.json…) to the plugin
+  *folder*, written with `/`, and relaunch Studio. Every file save
+  re-registers the plugin in open editors and reopens it if it was
+  running — no zipping during iteration. The Mac app's sandbox can't read
+  that folder, so re-import there.
 
 ## References
 
 - [references/api.md](references/api.md) — the full SDK: connect handle,
   every method's params and returns, events, limits.
-- [references/actions.md](references/actions.md) — all 19 action ops,
+- [references/actions.md](references/actions.md) — all 25 action ops,
   per-op required fields, valid `set` keys, merge semantics.
 - [references/guide.md](references/guide.md) — the engine's own authoring
   reference: object types, styles and effects, text formulas, motion,

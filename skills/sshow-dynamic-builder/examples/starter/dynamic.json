@@ -1,0 +1,147 @@
+{
+    "id": "com.example.starter",
+    "name": "Starter",
+    "name_localized": {
+        "ko": "시작"
+    },
+    "version": "1.0.0",
+    "api": 1,
+    "description": "Sliding stripes for fills and a hard shadow for any object: a starting point for your own pack.",
+    "description_localized": {
+        "ko": "흐르는 줄무늬 칠과 어떤 오브젝트에나 쓰는 또렷한 그림자 효과입니다. 나만의 팩을 만드는 출발점으로 쓰세요."
+    },
+    "author": "SSHOW",
+    "icon": "icon.png",
+    "dynamics": [
+        {
+            "name": "stripes",
+            "label": "Stripes",
+            "label_localized": {
+                "ko": "줄무늬"
+            },
+            "slot": "paint",
+            "animated": true,
+            "params": [
+                {
+                    "key": "color1",
+                    "label": "Color 1",
+                    "label_localized": {
+                        "ko": "색상 1"
+                    },
+                    "type": "color",
+                    "default": "#6366f1"
+                },
+                {
+                    "key": "color2",
+                    "label": "Color 2",
+                    "label_localized": {
+                        "ko": "색상 2"
+                    },
+                    "type": "color",
+                    "default": "#e0e7ff"
+                },
+                {
+                    "key": "size",
+                    "label": "Size",
+                    "label_localized": {
+                        "ko": "크기"
+                    },
+                    "type": "number",
+                    "default": 24,
+                    "min": 4,
+                    "max": 200,
+                    "step": 1
+                },
+                {
+                    "key": "rotation",
+                    "label": "Rotation",
+                    "label_localized": {
+                        "ko": "회전"
+                    },
+                    "type": "number",
+                    "default": 45,
+                    "min": 0,
+                    "max": 360,
+                    "step": 1,
+                    "unit": "°"
+                },
+                {
+                    "key": "speed",
+                    "label": "Speed",
+                    "label_localized": {
+                        "ko": "속도"
+                    },
+                    "type": "number",
+                    "default": 0.5,
+                    "min": 0,
+                    "max": 5,
+                    "step": 0.1
+                }
+            ],
+            "glsl": "// Stripes: bands of two colours, size px each, turned by rotation and sliding at speed.\n\n// 1 on the first colour's band, 0 on the second's. along is in pixels, so near\n// an edge wave * size / PI is the distance to it in pixels: a one-pixel soft\n// edge without fwidth, which GLSL ES 1.00 does not have.\nfloat band(float along, float size) {\n    float wave = sin(along / size * 3.14159265);\n    return clamp(wave * size / 3.14159265 + 0.5, 0.0, 1.0);\n}\n\nvec4 dynamicPaint(vec2 uv) {\n    vec2 px = uv * uOutputFrame.zw;\n    float a = radians(uRotation);\n    float along = dot(px, vec2(cos(a), sin(a))) + uTime * uSpeed * uSize;\n    return vec4(mix(uColor2, uColor1, band(along, uSize)), 1.0);\n}"
+        },
+        {
+            "name": "shadow",
+            "label": "Hard Shadow",
+            "label_localized": {
+                "ko": "또렷한 그림자"
+            },
+            "slot": "effect",
+            "padding": {
+                "plus": 0,
+                "scale": {
+                    "distance": 1
+                }
+            },
+            "params": [
+                {
+                    "key": "distance",
+                    "label": "Distance",
+                    "label_localized": {
+                        "ko": "거리"
+                    },
+                    "type": "number",
+                    "default": 16,
+                    "min": 0,
+                    "max": 64,
+                    "step": 1
+                },
+                {
+                    "key": "angle",
+                    "label": "Angle",
+                    "label_localized": {
+                        "ko": "각도"
+                    },
+                    "type": "number",
+                    "default": 45,
+                    "min": 0,
+                    "max": 360,
+                    "step": 1,
+                    "unit": "°"
+                },
+                {
+                    "key": "color",
+                    "label": "Color",
+                    "label_localized": {
+                        "ko": "색상"
+                    },
+                    "type": "color",
+                    "default": "#1e1b4b"
+                },
+                {
+                    "key": "amount",
+                    "label": "Amount",
+                    "label_localized": {
+                        "ko": "양"
+                    },
+                    "type": "number",
+                    "default": 0.6,
+                    "min": 0,
+                    "max": 1,
+                    "step": 0.01
+                }
+            ],
+            "glsl": "// Shadow: the object's silhouette in a colour, distance px away along angle, behind its own pixels (one read).\nvec4 dynamicEffect(vec2 uv, vec4 src) {\n    float a = radians(uAngle);\n    vec2 offset = vec2(cos(a), sin(a)) * uDistance * uViewportScale * uInputSize.zw;\n    float cover = texture(uTexture, clamp(uv - offset, uInputClamp.xy, uInputClamp.zw)).a * uAmount;\n    vec4 shadow = vec4(uColor * cover, cover);\n    return src + shadow * (1.0 - src.a);\n}"
+        }
+    ]
+}

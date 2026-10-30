@@ -1,7 +1,7 @@
 {
     "name": "sshow-skills",
     "owner": { "name": "SSHOW", "email": "support@s.show" },
-    "metadata": { "description": "Agent skills for building on SSHOW", "version": "1.1.0" },
+    "metadata": { "description": "Agent skills for building on SSHOW", "version": "1.2.0" },
     "plugins": [
         {
             "name": "sshow-project-builder",
@@ -21,6 +21,16 @@
             "source": "./",
             "strict": false,
             "skills": ["./skills/sshow-plugin-builder"],
+            "homepage": "https://s.show"
+        },
+        {
+            "name": "sshow-dynamic-builder",
+            "description": "Build SSHOW dynamic packs — GLSL shader paints and effects, packaged as .sshowdynamic — from any agent.",
+            "author": { "name": "SSHOW", "email": "support@s.show" },
+            "category": "development",
+            "source": "./",
+            "strict": false,
+            "skills": ["./skills/sshow-dynamic-builder"],
             "homepage": "https://s.show"
         }
     ]

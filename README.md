@@ -14,6 +14,7 @@ Copilot, and any other agent that speaks the format.
 |---|---|
 | [sshow-project-builder](skills/sshow-project-builder) | Build SSHOW projects — multi-scene `.sshow` documents with design, media, motion, and interactivity, compiled from action JSON through the real engine |
 | [sshow-plugin-builder](skills/sshow-plugin-builder) | Build SSHOW editor plugins — manifest, sandboxed HTML screen, `.sshowplugin` packaging, testing, and publishing to the catalog |
+| [sshow-dynamic-builder](skills/sshow-dynamic-builder) | Build SSHOW dynamic packs — GLSL shader paints and effects, compiled and previewed through the real engine, packaged as `.sshowdynamic` and published to the catalog |
 
 # Use with your agent
 
@@ -23,6 +24,7 @@ Copilot, and any other agent that speaks the format.
 /plugin marketplace add sshow-official/skills
 /plugin install sshow-project-builder@sshow-skills   # build .sshow projects
 /plugin install sshow-plugin-builder@sshow-skills    # build editor plugins
+/plugin install sshow-dynamic-builder@sshow-skills   # build dynamic packs
 ```
 
 Each skill is its own plugin — install only what you need.
@@ -68,6 +70,6 @@ description: Does X for Y files. Use when the user asks for X or mentions Y.
 # License
 
 MIT — see [LICENSE](LICENSE). It covers the skills and their instructions,
-references, scripts, and examples. The vendored engine bundle
-(`skills/sshow-project-builder/engine/`) is proprietary and excluded; so are
-the SSHOW name and marks.
+references, scripts, and examples. The vendored engine bundles
+(`skills/sshow-project-builder/engine/`, `skills/sshow-dynamic-builder/engine/`)
+are proprietary and excluded; so are the SSHOW name and marks.

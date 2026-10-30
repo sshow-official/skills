@@ -1,5 +1,5 @@
 <!-- GENERATED from the engine bundle — do not edit by hand.
-     Engine bundle c1763182 · extracted 2026-09-27.
+     Engine bundle 1c053c4b · extracted 2026-10-30.
      Regenerate: node skills/sshow-project-builder/scripts/sync-engine.mjs [--bundle <path-or-url>] -->
 
 # Engine guide (AGENT_GUIDE)
@@ -16,7 +16,7 @@ MCP server serve. Read the sections relevant to the current document.
 ## 2. Scenes
 
 A scene holds objects + a background `style` (fills/strokes/effects) + `motion` (navigation transitions §8 + the timeline clock declaration §10) + `clip`. Operate via the `*_scene` ops (create_scene/update_scene/delete_scene/duplicate_scene/move_scene/set_scene_size); `update_scene` `set` keys: name/description/notes/style/visible/motion/data/clip. `clip:true` masks the scene's content to the canvas bounds (stored as `data.clip`). "this scene" / "current scene" = the one with `active:true` in the provided state.
-Defaults: name `'New Scene'`, fills white solid, `clip:false` (objects may overflow the canvas visibly).
+Defaults: the editor's new-scene name (`'New Scene'` in English), fills white solid, `clip:false` (objects may overflow the canvas visibly).
 
 ---
 
@@ -38,7 +38,7 @@ Common defaults: `size 100×100`, `transform { x:0,y:0,z:0, rotateX:0,rotateY:0,
 
 Rules: with default anchor, `x:0,y:0` is NOT top-left — half the object goes off-canvas. `rotateZ` pivots around anchor. Resizing also pivots around anchor (0.5/0.5 grows from center; 0/0 grows right/down). Changing anchor while keeping (x,y) MOVES the object — compensate `(x,y) += size·Δanchor` to preserve on-screen position.
 
-**Relative edits**: read the target's CURRENT value (from the state you were given, or `get_object`), compute the new value, send only the changed field. `set.transform`/`set.size`/`set.data`/`set.layout` MERGE (send only changed keys); `set.style`/`set.distort` REPLACE wholesale. To edit a child of a group, target the child's own id.
+**Relative edits**: read the target's CURRENT value, compute the new value, send only the changed field. `set.transform`/`set.size`/`set.data`/`set.layout` MERGE (send only changed keys); `set.style`/`set.distort` REPLACE wholesale. To edit a child of a group, target the child's own id.
 
 ### Pin layout (`layout.pin`) — responsive constraints
 
@@ -57,7 +57,7 @@ Rules: with default anchor, `x:0,y:0` is NOT top-left — half the object goes o
 
 ## 4. Object types
 
-Primitive type strings (the ONLY valid first arg to `createObject`): `'rect' | 'circle' | 'path' | 'text' | 'image' | 'video' | 'audio' | 'group' | 'frame'`. Helper-function names like `lineH`/`lineV`/`text` are NOT primitives.
+Primitive type strings (the `type` of `create_object`): `'rect' | 'circle' | 'path' | 'text' | 'image' | 'video' | 'audio' | 'stream' | 'group' | 'frame' | 'table'` (a stream is §4.8, a table §14).
 
 ### 4.1 rect
 `size 100×100`, default fill `#000000` solid, `data.radius: [20,20,20,20]` (rounded by default — use `[0,0,0,0]` for sharp). Radius order: [tl, tr, br, bl]. Default anchor 0.5/0.5 → (x,y) is CENTER; for top-left placement set `transform: { anchorX:0, anchorY:0 }`.
@@ -78,8 +78,11 @@ Default fills `[]`, stroke only. Points local to the `size` box, and the two sta
 ```
 **Quirk**: the drawing's top-left (curve bulges included) is re-based to (0,0) WITHOUT compensating `transform.x/y` — author the points from (0,0) or the object drifts.
 
+#### Connectors
+An open path (`closed: false`) whose `data.connectionStart`/`connectionEnd` name objects is a connector: the engine lays it between them, so its `transform`, `size` and `distort` are not yours (an update drops them). An end is written whole, `{ objectId, position }`: `objectId` a state id or an EARLIER create's alias; `position` {x, y} 0..1 of the target's box fixes the end (a side middle is its port; omit for automatic); `null` lets go; `position` alone keeps the target. `connectionRoute` 'straight'|'curve'|'elbow'|'free' (free keeps your points; an update writing points sets it); `connectionAvoid: true` routes a curve or elbow around shapes. Create one with both ends and a route, no points (only a free end needs them).
+
 ### 4.4 image / video / audio
-`fills: []`. `image.data.src` = `'asset://id.ext'` of an existing project asset (an http(s) URL or data URI is not loaded — the action is skipped; register it first where an import tool is offered). `video.data`: `src 'asset://id', autoplay, loop, muted, volume, trimIn, trimOut, controls, timelineSync, timelineOffset` (offset = clock ms the synced clip starts at). `audio` placeholder 20×20.
+`fills: []`. `image.data.src` = `'asset://id.ext'` of an existing project asset (an http(s) URL or data URI is not loaded — the action is skipped; register it first where an import tool is offered). `video.data`: `src 'asset://id', autoplay, loop, muted, volume, trimIn, trimOut, controls, timelineSync, timelineOffset` (trimIn/trimOut in SECONDS; offset = clock ms the synced clip starts at). `audio` placeholder 64×64.
 
 ### 4.5 group
 Group via `group_objects` (≥2 existing ids); split via `ungroup`. A group's `data.boolean` (`'none'|'mask'|'invertedMask'`) makes the first child clip the rest ('invertedMask' shows OUTSIDE the mask instead). Child (x,y) is local to the group; `move_object` with `options.parentObjectId` (+ `preserveWorldPosition`) re-parents.
@@ -168,9 +171,12 @@ data: {
 #### fontFamily
 Set `data.fontFamily` to a name from the **Registerable CDN font catalog** (or one already registered, listed in the state `fonts`) — the engine auto-loads it from the catalog on first use; unknown names fall back to the system font. Korean text → a font whose `languages` include `ko` (default `Pretendard`). Never invent a font name.
 
+### 4.8 stream
+A live camera or screen share in the deck — the presenter's camera in a corner, the area a demo is shared into — placed only when the user asks for one. `size 640×360`, `fills: []`. `data`: `source.kind` 'camera' | 'screen' (each create gets a source of its own and a duplicate_object copy shares the original's; to show a source the state already lists again — the same camera on another scene — write its `source.id` too, never an id of your own), `fit` 'cover' (fills, cropping) | 'contain', `mirror` (a front camera), `muted` (default true), `volume`, `poster` (`'asset://id.ext'` of an existing image), `radius`. A source you make is this device's camera or screen; one from a paired device (a phone, another computer) is the presenter's to pick in the editor. The user turns the source on — in the editor or by starting the show; until then, and always in exports, thumbnails, screenshots and the audience's screens, it shows its poster or else a dark plate with its name.
+
 ## 5. Coordinate space
 
-Origin (0,0) = top-left of scene; X right, Y down; pixels. `set.transform.rotateX/rotateY/rotateZ` are in **degrees** (the engine stores radians internally; the tool layer converts); an angle READ back (`get_object`, the state) is radians — convert before re-sending. Center of 1920×1080 = (960, 540) at default anchor.
+Origin (0,0) = top-left of scene; X right, Y down; pixels. `set.transform.rotateX/rotateY/rotateZ` are in **degrees** (the engine stores radians internally; the tool layer converts); an angle READ back (`get_object`, the state) is radians — convert before re-sending. `skewX/skewY` stay radians. Center of 1920×1080 = (960, 540) at default anchor.
 
 ---
 
@@ -200,8 +206,11 @@ Origin (0,0) = top-left of scene; X right, Y down; pixels. `set.transform.rotate
   colors:[...], opacity:1, visible:true }
 
 // image fill — `src` MUST be an `asset://id` already registered in the project
-// (you cannot mint asset ids from generated code; only reuse existing ones).
+// (an action cannot create one; reuse an existing asset, §4.4).
 { type:'image', src:'asset://id', repeat:false, scale:1, rotation:0, opacity:1, visible:true }
+
+// dynamic — a shader pattern; installed only (dynamics in state / get_project_overview)
+{ type:'dynamic', source:'app.sshow.basic', name:'aurora', params:{}, opacity:1, visible:true }
 
 // stroke — align: 0..1 (0=outside, 0.5=center, 1=inside); the second line is optional (defaults shown)
 { type:'solid', color:'#000', align:0.5, width:2, opacity:1, visible:true,
@@ -216,17 +225,18 @@ Strokes accept the SAME gradient types as fills (linear/radial/angular/diamond) 
 
 | effect | properties (defaults) |
 |---|---|
-| `blur` | `strength:8` (0–100), `quality:4` (1–10) |
-| `backdropBlur` | `strength:8`, `quality:4` |
-| `dropShadow` / `innerShadow` | `offsetX/Y:4` (-100~100), `blur:4` (0–50), `spread:0`, `quality:8`, `color:'#000'`, `alpha:0.5` |
+| `blur` | `strength:8` (0–100) |
+| `backdropBlur` | `strength:8` |
+| `dropShadow` / `innerShadow` | `offsetX/Y:4` (-100~100), `blur:4` (0–50), `spread:0`, `color:'#000'`, `alpha:0.5` |
 | `outerGlow` | `blur:8`, `spread:0`, `intensity:1`, `color:'#fff'`, `alpha:0.7` |
-| `glass` | `refraction:0.5` (0–2), `chromaticAberration:0.3` (0–2), `tint:0.97` (0–1), `blur:8` (0–100) — needs something behind; fills `[]` or semi-transparent; tint color auto-derived |
+| `glass` | `refraction:0.5` (0–2), `chromaticAberration:0.3` (0–2), `blur:8` (0–100) — needs something behind; fills `[]` or semi-transparent; the first visible solid fill tints it (opacity = strength) |
 | `noise` | `amount:0.2` (0–1), `scale:1`, `monochrome:true`, `seed:0` |
-| `adjustment` | `brightness/contrast/saturation/hue/exposure` (-1..1; hue/exposure for color grade). Grading long-tail (emit ONLY when asked): `colorBalance:{shadows|midtones|highlights:{cyanRed,magentaGreen,yellowBlue}}`, `blackAndWhite:{enabled,tint}` |
+| `adjustment` | `brightness/contrast/saturation/exposure/temperature/tint/vibrance/highlights/shadows/whites/blacks/clarity` (-100..100, 0 = unchanged), `hue` (-180..180 degrees), `sharpen/vignette` (0..100), `invert` 0 or 100 (100 = inverted); temperature/tint/exposure for color grade. Grading long-tail (emit ONLY when asked): `colorBalance:{shadows|midtones|highlights:{cyanRed,magentaGreen,yellowBlue}}` (-100..100), `blackAndWhite:{enabled,tint}`, `levels`/`curves` per channel (r/g/b apply before rgb), only when asked |
+| `dynamic` | `source`, `name`, `params` (installed effect dynamics — see dynamics in state), `opacity:1` (0–1, mix over the object) |
 
 **Progressive (gradient) blur** — `blur`/`backdropBlur` fade the blur along an axis: `startX/startY` → `endX/endY` (0..1 of the object), with `startStrength`/`endStrength` (0..1 blur multiplier; `1/1` = uniform). Focus blur (sharp top → blurred bottom): `{type:'blur',strength:16,startX:0.5,startY:0,endX:0.5,endY:1,startStrength:0,endStrength:1}`.
 
-Phrasing → effect: glass/liquid/lens/유리/리퀸드 → `glass`. blur/흐리게 → `blur`. gradient blur/점점 흐리게/초점 → progressive blur. backdrop/배경블러 → `backdropBlur`. shadow/그림자 → `dropShadow`. grade/색보정/흑백 → `adjustment`. grain/노이즈 → `noise`.
+Phrasing → effect: glass/liquid/lens/유리/리퀴드 → `glass`. blur/흐리게 → `blur`. gradient blur/점점 흐리게/초점 → progressive blur. backdrop/배경블러 → `backdropBlur`. shadow/그림자 → `dropShadow`. grade/색보정/흑백 → `adjustment`. warm/cool photo/사진 따뜻하게/차갑게 → `adjustment` `temperature`. vignette/비네팅 → `adjustment` `vignette`. grain/노이즈 → `noise`.
 
 ---
 
@@ -246,6 +256,7 @@ style:{ fills:[{ type:'solid', color:'{{brand}}', opacity:1, visible:true }], st
 
 - Escape literal braces with a backslash: `\{\{notice\}\}` renders `{{notice}}`.
 - A `{{name}}` bound to a NON-color variable used as a color collapses to gray (Pixi can't parse it) — only `type:'color'` vars belong in color slots.
+- Dynamic `params` take plain values only — tokens are not resolved there.
 - **Built-in system variables (always available, read-only):** `{{projectName}}`, `{{sceneName}}`, `{{pageNo}}` (1-based, visible scenes only), `{{totalPageNo}}`. Ideal for a persistent page-number text reused across scenes (give it a stable `name` so it morphs).
 
 ---
@@ -345,15 +356,15 @@ Mental model: animate BETWEEN scenes by adding/duplicating a "next" scene with t
 
 ## 10. Timeline animation (per-scene clock)
 
-The scene's `motion.animations.default` DECLARES a clock; each member object's `motion.animations.default.keyframes` binds property tracks to it. Play mode runs the clock on scene entry; `stops` are PPT-style clicker stop points (playback pauses at each).
+The scene's `motion.animations.default` DECLARES a clock; each member object's `motion.animations.default.keyframes` binds property tracks to it. With none declared, objects keyed on it or a `timelineSync` clip run on a 5000ms one — declare it to set the length (a synced clip stops at the clock's end). Play mode runs the clock on scene entry (a show's opening scene waits for the first click unless the show loops or its rules run without input); `stops` are PPT-style clicker stop points: playback pauses ON ARRIVAL, keys after a stop play on the next click, a stop at the play start (0, or the work area's start) holds the entry for the first click.
 
 ```js
 // scene — clock declaration (update_scene set.motion)
 { animations: { default: {
-    duration: 4000,                                   // ms (default 5000)
+    duration: 1200,                                   // ms (default 5000) — end it at the last key
     fps: 12,                                          // OPTIONAL frame-grid sampling (stop-motion feel); omit = smooth
-    stops: [{ id:'s1', time:1500, label:'beat 2' }],  // self-assign ids ('s1','s2',…)
-    workArea: { start:1000, end:2500 },               // OPTIONAL play span ms (AE work area) — play mode runs ONLY this slice; the editor previews the whole clock
+    stops: [{ id:'s1', time:600, label:'beat 2' }],   // self-assign ids ('s1','s2',…)
+    workArea: { start:300, end:1200 },                // OPTIONAL play span ms (AE work area) — play mode runs ONLY this slice; the editor previews the whole clock
     keyframes: { style: [ /* background style keys */ ] }
 } } }
 
@@ -364,11 +375,11 @@ The scene's `motion.animations.default` DECLARES a clock; each member object's `
 } } } }
 ```
 
-- Track keys (object): `transform.x` `transform.y` `transform.z` `transform.rotateX` `transform.rotateY` `transform.rotateZ` `transform.scaleX` `transform.scaleY` `transform.skewX` `transform.skewY` `transform.anchorX` `transform.anchorY` `transform.perspective` · `size.width` `size.height` · `opacity` · `style` (whole-style keys) · `style.fills.N`/`style.strokes.N`/`style.effects.N` (ONE paint/effect item per key) · `data.text` (string, discrete step) · `data.points` (path geometry — see below) · `distort` (perspective quad: `{type:'perspective',visible:true,corners:[{x,y}×4]}` TL,TR,BR,BL normalized 0..1, or `null` = flat) · `data.radius.tl` `data.radius.tr` `data.radius.br` `data.radius.bl` · `data.innerRadius` · `data.volume` (video/audio, 0..1). Scene: `style` only. Any other key throws.
+- Track keys (object): `transform.x` `transform.y` `transform.z` `transform.rotateX` `transform.rotateY` `transform.rotateZ` `transform.scaleX` `transform.scaleY` `transform.skewX` `transform.skewY` `transform.anchorX` `transform.anchorY` `transform.perspective` · `size.width` `size.height` · `opacity` · `style` (whole-style keys) · `style.fills.N`/`style.strokes.N`/`style.effects.N` (ONE paint/effect item per key) · `data.text` (string, discrete step) · `data.points` (path geometry — see below) · `distort` (perspective quad: `{type:'perspective',visible:true,corners:[{x,y}×4]}` TL,TR,BR,BL normalized 0..1, or `null` = flat) · `data.radius.tl` `data.radius.tr` `data.radius.br` `data.radius.bl` · `data.innerRadius` · `data.volume` (video/audio, 0..1) · `data.fontSize` (text, px). Scene: `style` only. Any other key throws.
 - `data.points` (path objects only) keys the WHOLE point array — the shape at that instant, in the path's own local coordinates (NOT re-based to the origin like the document array). Keys whose arrays share a topology (same length, same `type` per index) interpolate vertex-for-vertex WITH their bezier handles, so curves stay curves; add or remove a point between keys and the pair holds the earlier shape instead (no guessed correspondence). Author both keys from the same starting shape and move vertices to morph.
 - Values are ENGINE units: x/y/z/size in px, `transform.rotateX/rotateY/rotateZ` in RADIANS (deg × π/180 — the degree bridge applies to `set.transform.rotate*` only, NOT tracks), opacity 0..1, scale 1 = 100%.
 - A keyframe's `tween` shapes the segment TOWARD THE NEXT key: `{type:'easing',easing:{curve:[…]}}` (no duration/delay — segment length = key spacing), `{type:'spring',spring:{…}}`, or `{type:'step'}` (hold, then jump — appear/disappear). Omit = default ease. Before the first key / after the last, the track HOLDS that value.
-- Recipes: hidden until 1s then fade in → `opacity [{time:1000,value:0},{time:1600,value:1}]`. Slide-in beat → key `transform.x` from off-canvas to rest. Appear at a stop → `step` tween landing on the stop time. Stagger entrances by offsetting key times (index × 100–150ms).
+- Recipes: hidden until 1s then fade in → `opacity [{time:1000,value:0},{time:1600,value:1}]`. Slide-in beat → key `transform.x` from off-canvas to rest. Reveal on a click → key it from the stop time (a key landing ON a stop shows at the arrival, ending the previous beat). Stagger entrances by offsetting key times (index × 100–150ms).
 - **Merge rule**: `set.motion` merges per sub-container — a sent `animations` map REPLACES the whole animations map (same for `transitions`); the omitted one is preserved. For ANY animation edit, read the entity's current `motion.animations` from state, modify, and resend the COMPLETE map (`{}` clears it). A `<… N more keyframes …>` marker means that track was shortened for size — never resend it.
 - A FRAME's NAMED entry with a `duration` is the frame's own clock (its subtree binds tracks of that name; rules play it — §13). It may carry `state: {}` / `{initial:true}` (a state of the frame; ONE initial per frame = the pose it rests in, none flagged = the first state declared; entered with `setState`, never played; a state reads neither `autoplay` nor `loop`), `autoplay: true` (starts when the scene opens; one per frame) and `loop: true` (restarts at its end; never completes).
 - Restraint: ≤6 objects with tracks per scene, 2–3 keys per track, one curve family per scene; respect the §12 feel budgets.
@@ -381,8 +392,8 @@ The scene's `motion.animations.default` DECLARES a clock; each member object's `
 - **Spacing**: 8px grid (or 4 for fine-tuning). Common insets 48/64/80/96/120.
 - **Hierarchy**: ONE hero per slide (largest fontSize, brightest color, or only object with motion).
 - **Whitespace**: ≥30% empty.
-- **Effect restraint**: ≤1 per object, only when asked.
-- **Motion restraint**: 1–3 reveals per slide, one curve per deck.
+- **Effect restraint**: only when asked (§6).
+- **Motion restraint**: 1–3 reveals per slide, one curve family per deck.
 
 ---
 
@@ -402,7 +413,7 @@ A scene or an object holds **rules** `{ id, enabled?, trigger, conditions?, acti
 
 ### Triggers
 `click` · `doubleClick` · `longPress` · `swipe {direction}` · `pointerDown` · `pointerUp` · `pointerEnter` · `pointerLeave` · `hovering` · `pressing` · `keyDown {key, ctrl?, shift?, alt?}` · `sceneEnter` · `timer {delay}` (ms after entering the scene) · `animationComplete {name?}` · `stopReached {stopId?}` · `variableChange {variableId}` · `mediaEnded {objectId?}` · `mediaHit {objectId?, time}` · `message {name, into?}`.
-`hovering` / `pressing` are WHILE triggers: what they play with `fill:'hold'` eases back when the hover / press ends. Hover never runs on touch — never the only way to reach something. A `swipe` needs its `direction`; on the scene it is the whole deck's. A media trigger follows a clip of the rule's own scene (omitted `objectId` = the holder), and never one with `data.timelineSync`.
+`hovering` / `pressing` are WHILE triggers: what they play with `fill:'hold'` eases back when the hover / press ends. Hover never runs on touch, and a presenter's remote laser holds only a `hovering` rule that just plays plain animations with `fill:'hold'` (no state, stops, autoplay or scene style; no other rule plays or awaits them) — never the only way to reach something. On the scene, `animationComplete` / `stopReached` with nothing picked hear only the slide clock and `autoplay` clocks — name a top-level object's effect to wait for it. A `swipe` needs its `direction`; on the scene it is the whole deck's. A media trigger follows a clip of the rule's own scene (omitted `objectId` = the holder), and never one with `data.timelineSync`.
 A `message` rule may keep what the message carries: `into: [{path, variableId}]` puts the payload into variables BEFORE the conditions (`path` like `$.choice` or `items[0]`, `$` = the whole payload; the variable's type is kept — a value that does not fit holds the rule back).
 
 ### Conditions
@@ -419,3 +430,18 @@ A `fetch` action (a web request whose answer fills variables) is written by hand
 - Quiz score: `{"id":"r1","trigger":{"type":"click"},"actions":[{"type":"setVariable","variableId":"<score>","op":"increment"},{"type":"nextScene"}]}`; gate a result with `"conditions":[{"type":"variable","variableId":"<score>","op":">=","value":3}]`
 - Toggle: the frame declares `closed {duration:200, keyframes:{}, state:{initial:true}}` and `open {duration:240, keyframes:{…}, state:{}}` (§10); rules `{"id":"r1","trigger":{"type":"click"},"conditions":[{"type":"state","state":"closed"}],"actions":[{"type":"setState","state":"open"}]}` and the reverse
 - Prototype (empty clicks do nothing): on the scene, `{"id":"r1","trigger":{"type":"click"},"actions":[]}`
+
+## 14. Tables
+
+A `table` is a grid: its `data` holds the rows, the columns and the looks, and each cell's text is a child `text` (the cell's content) the table places and sizes. The state reads it by its cells — `data.columns` / `data.rows` (`{id, width}` / `{id, height}`, top-left first), `data.values` (the cell texts by row: a merged cell's at its start, `null` over the rest), `contents` (each cell's content id, the same grid) and `merges` (`{rowIndex, colIndex, rowSpan, colSpan}`). Indexes count from 0; a cell's key is `'rowId:colId'`.
+
+- **Create** — ONE `create_object` type `'table'`: `config.data.values` makes the grid (≤400 cells); `size` is shared evenly by the columns and rows, or give `data.columns: [{width}]` / `data.rows: [{height}]` in order; `transform.x/y` is its top-left. It comes with a light header row, 1px inner lines, an outline and a white background — set `headerRows`, `bandRows`, `lines`, `padding` in the same config to change them.
+  `{"op":"create_object","type":"table","config":{"name":"sales","size":{"width":720,"height":200},"transform":{"x":160,"y":200},"data":{"values":[["Item","Q1","Q2"],["Sales","120","150"],["Profit","30","42"]]}}}`
+- **Texts** — `update_object` on the table with `set.data.values`: rows from the top-left; `null` keeps a cell, `""` empties it; rows or columns past the edge are added at the end.
+- **Rows and columns** — `insert_table_rows` / `insert_table_columns` `{id, index?, count?, values?}`: `index` is where they go (omit = after the last), `values` the new cells' texts by row (for columns, each table row's texts of the new columns); a new cell takes its neighbor's text style. `delete_table_rows` / `delete_table_columns` `{id, index, count?}`. Sizes: `set.data.columns: [{id, width}]`, `set.data.rows: [{id, height}]` — matched by id; a row's height is its LEAST, it grows to its text.
+- **Merge** — `merge_table_cells` `{id, range:{rowIndex, colIndex, rowSpan, colSpan}}` joins the texts into the start cell; `unmerge_table_cells` `{id, range}` splits every merged cell in the range.
+- **Table look** — `set.data`, inner keys merge (send what changes): `headerRows: {count, fill}` (the top `count` rows), `bandRows: {fill}` (every other body row), `lines: {horizontal, vertical}` (the inner lines), `padding: [t,r,b,l]` (every cell's), `radius`, `clip`. The table's own `style`: fills = background, strokes = outline.
+- **Cell look** — `set.data.cells: {"rowId:colId": {fill, borders:{top, right, bottom, left}, padding}}` merges into that cell's own look; `null` for the whole entry hands the cell back to the table's look. An edge keeps ONE line: writing a cell's side clears the facing cell's.
+- **Paints** in a table are `{color:'#RRGGBB', opacity}` — solid only, no gradient, image or {{variable}}; a line adds `width`; `null` = none; `visible:false` keeps a paint off with its color (`visible:true` shows it again).
+- **Cell text** — `update_object` on the content ids in `contents`: `set.data` typography (`verticalAlign` is the cell's vertical alignment, `textAlign` its horizontal) and `set.style.fills` for the color. New cells: Pretendard 18/26 `#0F172A`, vertically middle, the header 700. A dark header fill needs light header text (F8) — style those contents too; a table created in this request has no content ids yet.
+- **The table owns its cells** — a content's x/y, size, autoSize and address are the table's (dropped or refused); a content is never moved, copied, grouped or converted out of its cell, and deleting it empties its text. The table's own `set.size` is refused — size its columns and rows. Rotate, tilt or distort the table like any object.
